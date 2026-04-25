@@ -1204,6 +1204,7 @@ body.sb-locked { overflow:hidden; }
   font-size: .80rem;
   line-height: 1.65;
   white-space: pre;
+  color: #abb2bf; /* atom-one-dark default; overridden by hljs token colours */
 }
 /* highlight.js override — let our bg win */
 .msg-bubble .md-code-block .hljs {

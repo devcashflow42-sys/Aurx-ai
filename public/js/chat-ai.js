@@ -1106,6 +1106,7 @@
       bubble.className = 'msg-bubble';
       if (role === 'ai') {
         bubble.innerHTML = parseMarkdown(text);
+        requestAnimationFrame(function () { applyHighlighting(bubble); });
       } else {
         bubble.textContent = text;
       }
