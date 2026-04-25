@@ -68,9 +68,10 @@ app.use('/api', apiRoutes);
 /* ─────────────────────────────────────────────
    HTML routes (clean URLs)
 ───────────────────────────────────────────── */
-app.get('/',        (_req, res) => res.sendFile(path.join(PUBLIC, 'index.html')));
-app.get('/login',   (_req, res) => res.sendFile(path.join(PUBLIC, 'login.html')));
-app.get('/chat-ai', (_req, res) => res.sendFile(path.join(PUBLIC, 'chat-ai.html')));
+app.get('/',          (_req, res) => res.sendFile(path.join(PUBLIC, 'index.html')));
+app.get('/login',     (_req, res) => res.sendFile(path.join(PUBLIC, 'login.html')));
+app.get('/chat-ai',   (_req, res) => res.sendFile(path.join(PUBLIC, 'chat-ai.html')));
+app.get('/projects',  (_req, res) => res.sendFile(path.join(PUBLIC, 'projects.html')));
 
 /* ─────────────────────────────────────────────
    API 404 — rutas /api/* desconocidas
