@@ -1409,3 +1409,229 @@ body.sb-locked { overflow:hidden; }
   0%, 100% { opacity: 1; }
   50%       { opacity: 0; }
 }
+
+/* ═══════════════════════════════════════════════════════════
+   WORKBENCH — split-panel tablero
+═══════════════════════════════════════════════════════════ */
+
+/* Panel container — starts hidden (width 0) */
+.workbench {
+  flex-shrink: 0;
+  width: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: #0d0d0d;
+  border-left: 1px solid transparent;
+  transition: width .28s cubic-bezier(.4,0,.2,1),
+              border-color .28s;
+  will-change: width;
+}
+.workbench.open {
+  width: 52%;
+  border-color: rgba(255,255,255,.07);
+}
+
+/* ── Top bar ──────────────────────────────────── */
+.wb-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 44px;
+  min-height: 44px;
+  padding: 0 12px 0 0;
+  background: #111111;
+  border-bottom: 1px solid rgba(255,255,255,.06);
+  flex-shrink: 0;
+  gap: 8px;
+  overflow: hidden;
+}
+
+/* ── File tabs ───────────────────────────────── */
+.wb-tabs {
+  display: flex;
+  align-items: stretch;
+  flex: 1;
+  height: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+  gap: 0;
+}
+.wb-tabs::-webkit-scrollbar { display: none; }
+
+.wb-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 14px;
+  height: 100%;
+  background: transparent;
+  border: none;
+  border-right: 1px solid rgba(255,255,255,.06);
+  color: rgba(255,255,255,.4);
+  font-size: 12px;
+  font-weight: 450;
+  font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: color .15s, background .15s;
+  flex-shrink: 0;
+}
+.wb-tab:hover  { color: rgba(255,255,255,.75); background: rgba(255,255,255,.04); }
+.wb-tab.active {
+  color: #fff;
+  background: rgba(255,255,255,.06);
+  border-bottom: 2px solid #10b981;
+}
+.wb-tab-dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* ── Controls (mode buttons + close) ─────────── */
+.wb-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.wb-mode-group {
+  display: flex;
+  background: rgba(255,255,255,.07);
+  border-radius: 7px;
+  padding: 2px;
+  gap: 2px;
+}
+.wb-mode-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  background: transparent;
+  border: none;
+  border-radius: 5px;
+  color: rgba(255,255,255,.45);
+  font-size: 11.5px;
+  font-weight: 500;
+  font-family: 'DM Sans', system-ui, sans-serif;
+  cursor: pointer;
+  transition: color .15s, background .15s;
+  white-space: nowrap;
+}
+.wb-mode-btn:hover  { color: rgba(255,255,255,.8); }
+.wb-mode-btn.active {
+  background: rgba(255,255,255,.12);
+  color: #fff;
+}
+.wb-close-btn {
+  display: grid;
+  place-items: center;
+  width: 30px; height: 30px;
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  color: rgba(255,255,255,.35);
+  cursor: pointer;
+  transition: color .15s, background .15s;
+  flex-shrink: 0;
+}
+.wb-close-btn:hover { color: #fff; background: rgba(255,255,255,.08); }
+
+/* ── Panes ────────────────────────────────────── */
+.wb-pane {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Code pane */
+.wb-code-scroll {
+  flex: 1;
+  overflow: auto;
+  padding: 20px 24px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255,255,255,.12) transparent;
+}
+.wb-code-scroll::-webkit-scrollbar { width: 5px; height: 5px; }
+.wb-code-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,.12); border-radius: 3px; }
+
+#wb-pre {
+  margin: 0;
+  font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', 'Courier New', monospace;
+  font-size: 13px;
+  line-height: 1.65;
+  white-space: pre;
+  tab-size: 2;
+}
+#wb-code {
+  display: block;
+  color: #e2e8f0;
+}
+
+/* Override hljs background so our dark bg shows */
+.wb-pane-code .hljs {
+  background: transparent !important;
+  padding: 0 !important;
+}
+
+/* Preview pane */
+.wb-pane-preview {
+  display: flex;
+  flex-direction: column;
+}
+.wb-preview-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 14px;
+  height: 38px;
+  min-height: 38px;
+  background: #111111;
+  border-bottom: 1px solid rgba(255,255,255,.06);
+  flex-shrink: 0;
+}
+.wb-preview-label {
+  font-size: 11px;
+  font-weight: 500;
+  color: rgba(255,255,255,.35);
+  text-transform: uppercase;
+  letter-spacing: .6px;
+}
+.wb-preview-reload {
+  display: grid;
+  place-items: center;
+  width: 26px; height: 26px;
+  background: transparent;
+  border: none;
+  border-radius: 5px;
+  color: rgba(255,255,255,.35);
+  cursor: pointer;
+  transition: color .15s, background .15s;
+}
+.wb-preview-reload:hover { color: #fff; background: rgba(255,255,255,.08); }
+
+#wb-iframe {
+  flex: 1;
+  width: 100%;
+  border: none;
+  background: #fff;
+}
+
+/* ── Workbench open: shrink .main ─────────────── */
+.shell.wb-open .main {
+  min-width: 0;
+}
+
+/* ── Responsive: below 768 px stack vertically ── */
+@media (max-width: 767px) {
+  .workbench.open {
+    position: fixed;
+    inset: 0;
+    width: 100% !important;
+    z-index: 200;
+    border-left: none;
+  }
+}
