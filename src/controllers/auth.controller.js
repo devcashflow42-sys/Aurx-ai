@@ -19,6 +19,9 @@ export const register = async (req, res, next) => {
     if (!name || !email || !password || !verifyPassword)
       return res.status(400).json({ success: false, message: 'All fields are required' });
 
+    if (password.length < 8)
+      return res.status(400).json({ success: false, message: 'Password must be at least 8 characters' });
+
     if (password !== verifyPassword)
       return res.status(400).json({ success: false, message: 'Passwords do not match' });
 

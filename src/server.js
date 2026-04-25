@@ -73,12 +73,19 @@ app.get('/login',   (_req, res) => res.sendFile(path.join(PUBLIC, 'login.html'))
 app.get('/chat-ai', (_req, res) => res.sendFile(path.join(PUBLIC, 'chat-ai.html')));
 
 /* ─────────────────────────────────────────────
+   API 404 — rutas /api/* desconocidas
+───────────────────────────────────────────── */
+app.use('/api', (_req, res) => {
+  res.status(404).json({ success: false, message: 'API route not found' });
+});
+
+/* ─────────────────────────────────────────────
    Global error handler
 ───────────────────────────────────────────── */
 app.use(errorHandler);
 
 /* ─────────────────────────────────────────────
-   404 — anything else → home
+   404 página — cualquier ruta HTML desconocida → home
 ───────────────────────────────────────────── */
 app.use((_req, res) => res.redirect('/'));
 

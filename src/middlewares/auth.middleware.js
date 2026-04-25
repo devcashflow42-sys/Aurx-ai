@@ -10,6 +10,7 @@ function parseCookies(cookieHeader = '') {
       .filter(Boolean)
       .map(c => {
         const idx = c.indexOf('=');
+        if (idx === -1) return [c, ''];          // cookie sin valor: "name" → ["name", ""]
         return [c.slice(0, idx).trim(), c.slice(idx + 1).trim()];
       })
   );

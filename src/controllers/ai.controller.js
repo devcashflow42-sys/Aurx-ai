@@ -29,33 +29,23 @@ export const chat = async (req, res, next) => {
     const tokenResult = await consumeTokens(uid, aiResult.tokensUsed);
 
     // 4. Write usage log to usageLogs/{uid}/{logId}
-    const now = Date.now();
+    const now    = Date.now();
     const logRef = db.ref(`usageLogs/${uid}`).push();
     await logRef.set({
-      model: aiResult.modelKey,
-      provider: aiResult.provider,
+      model:       aiResult.modelKey,
+      provider:    aiResult.provider,
       displayName: aiResult.displayName,
       prompt,
-      response: aiResult.text,
-      tokensUsed: aiResult.tokensUsed,
-      rawTokens: aiResult.rawTokens,
-      timestamp: now,
-    });
-
-    // 5. (Keep existing ai_history write for backwards compatibility)
-    const histRef = db.ref('ai_history').push();
-    await histRef.set({
-      userId: uid,
-      model: aiResult.modelKey,
-      prompt,
-      response: aiResult.text,
-      createdAt: now,
+      response:    aiResult.text,
+      tokensUsed:  aiResult.tokensUsed,
+      rawTokens:   aiResult.rawTokens,
+      timestamp:   now,
     });
 
     res.status(201).json({
       success: true,
       data: {
-        id: histRef.key,
+        id: logRef.key,
         model: aiResult.modelKey,
         provider: aiResult.provider,
         displayName: aiResult.displayName,
