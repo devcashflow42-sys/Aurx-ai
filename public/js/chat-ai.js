@@ -1043,6 +1043,9 @@
     if (bubble) {
       bubble.innerHTML = parseMarkdown(textBuf);
       applyHighlighting(bubble);
+      /* Save AI response so the conversation persists in Firebase */
+      currentMsgs.push({ role: 'ai', text: textBuf });
+      persistConv();
     } else {
       removeTyping(typingId);
       addMsg('ai', '⚠️ No se recibió respuesta del servidor.', [], true);

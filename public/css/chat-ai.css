@@ -1034,28 +1034,42 @@ body.sb-locked { overflow:hidden; }
 ══════════════════════════════════════════════════ */
 
 /* ── ▶ Progress step ── */
+/* ── Progress steps — Linear/Cursor style ── */
+/* Outer container feel: first step gets top margin, last gets bottom */
+.msg-bubble .md-step:first-of-type { margin-top: 10px; }
+.msg-bubble .md-step:last-of-type  { margin-bottom: 10px; }
+
 .msg-bubble .md-step {
   display: flex;
-  align-items: flex-start;
+  align-items: baseline;
   gap: 10px;
   width: 100%;
-  padding: 6px 12px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  margin: 2px 0;
-  font-size: .84rem;
-  line-height: 1.4;
+  padding: 5px 0 5px 2px;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid rgba(255,255,255,.05);
+  border-radius: 0;
+  margin: 0;
+  font-size: .855rem;
+  line-height: 1.55;
 }
-.msg-bubble .md-step + .md-step { margin-top: 2px; }
-.msg-bubble .md-step:first-child { margin-top: 8px; }
-.msg-bubble .md-step:last-of-type { margin-bottom: 8px; }
+.msg-bubble .md-step:first-of-type {
+  border-top: 1px solid rgba(255,255,255,.05);
+}
 
 .msg-bubble .md-step-bullet {
-  color: var(--text-3);
-  font-size: .7rem;
   flex-shrink: 0;
-  line-height: 1.6;
+  width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: rgba(16,185,129,.12);
+  color: #10b981;
+  font-size: .55rem;
+  line-height: 1;
+  margin-top: 1px;
 }
 .msg-bubble .md-step-body {
   flex: 1;
@@ -1064,19 +1078,21 @@ body.sb-locked { overflow:hidden; }
   overflow-wrap: break-word;
   word-break: break-word;
   white-space: normal;
-  line-height: 1.5;
+  line-height: 1.55;
 }
 .msg-bubble .md-step-action {
   color: var(--text);
   font-weight: 500;
+  font-size: .855rem;
 }
 .msg-bubble .md-step-arrow {
   color: var(--text-3);
-  font-size: .75rem;
+  font-size: .78rem;
+  margin: 0 1px;
 }
 .msg-bubble .md-step-result {
   color: var(--text-2);
-  font-size: .81rem;
+  font-size: .83rem;
 }
 
 /* ── ✅ / ❌ Result indicator ── */
@@ -1084,22 +1100,22 @@ body.sb-locked { overflow:hidden; }
   display: flex;
   align-items: flex-start;
   gap: 9px;
-  padding: 11px 14px;
-  border-radius: 10px;
+  padding: 10px 14px;
+  border-radius: 8px;
   margin: 12px 0 4px;
-  font-size: .88rem;
+  font-size: .875rem;
   font-weight: 500;
   line-height: 1.5;
 }
 .msg-bubble .md-result-ok {
-  background: #f0fdf4;
-  border: 1px solid #bbf7d0;
-  color: #166534;
+  background: rgba(16,185,129,.08);
+  border: 1px solid rgba(16,185,129,.2);
+  color: #34d399;
 }
 .msg-bubble .md-result-err {
-  background: #fef2f2;
-  border: 1px solid #fecaca;
-  color: #991b1b;
+  background: rgba(239,68,68,.08);
+  border: 1px solid rgba(239,68,68,.2);
+  color: #f87171;
 }
 .msg-bubble .md-result-icon { font-size: .95rem; flex-shrink: 0; line-height: 1.6; }
 .msg-bubble .md-result-text { flex: 1; }
