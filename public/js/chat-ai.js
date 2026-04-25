@@ -910,7 +910,13 @@
     }
 
     if (text) {
-      const bubble = document.createElement('div'); bubble.className='msg-bubble'; bubble.textContent=text;
+      const bubble = document.createElement('div');
+      bubble.className = 'msg-bubble';
+      if (role === 'ai') {
+        bubble.innerHTML = parseMarkdown(text);
+      } else {
+        bubble.textContent = text;
+      }
       body.appendChild(bubble);
     }
 
@@ -922,6 +928,142 @@
       currentMsgs.push({ role, text });
       persistConv();
     }
+  }
+
+  /* ══════════════════════════════════════════════
+     MARKDOWN RENDERER
+  ══════════════════════════════════════════════ */
+  function esc(s) {
+    return String(s)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  function inlineMd(text) {
+    return text
+      .replace(/\*\*\*(.*?)\*\*\*/g, '<strong><em>$1</em></strong>')
+      .replace(/\*\*(.*?)\*\*/g,     '<strong>$1</strong>')
+      .replace(/\*(.*?)\*/g,         '<em>$1</em>')
+      .replace(/~~(.*?)~~/g,         '<del>$1</del>')
+      .replace(/`([^`]+)`/g,         '<code class="md-code">$1</code>');
+  }
+
+  function parseMarkdown(raw) {
+    if (!raw) return '';
+    const lines = raw.split('\n');
+    let html = '';
+    let i = 0;
+    let inList = false;
+    let listTag = 'ul';
+    let inCodeBlock = false;
+    let codeLang = '';
+    let codeLines = [];
+
+    function closeList() {
+      if (inList) { html += `</${listTag}>`; inList = false; }
+    }
+
+    while (i < lines.length) {
+      const line = lines[i];
+
+      /* ── Fenced code block ── */
+      const fenceMatch = line.trim().match(/^```(\w*)$/);
+      if (fenceMatch && !inCodeBlock) {
+        closeList();
+        inCodeBlock = true;
+        codeLang = fenceMatch[1] || '';
+        codeLines = [];
+        i++; continue;
+      }
+      if (inCodeBlock) {
+        if (line.trim() === '```') {
+          const langLabel = codeLang
+            ? `<span class="md-code-lang">${esc(codeLang)}</span>` : '';
+          html += `<div class="md-code-block">${langLabel}<pre><code>${esc(codeLines.join('\n'))}</code></pre></div>`;
+          inCodeBlock = false; codeLines = []; codeLang = '';
+        } else {
+          codeLines.push(line);
+        }
+        i++; continue;
+      }
+
+      /* ── Horizontal rule ── */
+      if (/^---+$/.test(line.trim()) || /^\*\*\*+$/.test(line.trim())) {
+        closeList();
+        html += '<hr class="md-hr">';
+        i++; continue;
+      }
+
+      /* ── H1 ── */
+      if (line.startsWith('# ')) {
+        closeList();
+        html += `<h1 class="md-h1">${inlineMd(esc(line.slice(2)))}</h1>`;
+        i++; continue;
+      }
+
+      /* ── H2 ── */
+      if (line.startsWith('## ')) {
+        closeList();
+        html += `<h2 class="md-h2">${inlineMd(esc(line.slice(3)))}</h2>`;
+        i++; continue;
+      }
+
+      /* ── H3 → card if followed by list items ── */
+      if (line.startsWith('### ')) {
+        closeList();
+        const title = inlineMd(esc(line.slice(4)));
+        let j = i + 1;
+        const items = [];
+        while (j < lines.length) {
+          const l = lines[j].trim();
+          if (l === '') { j++; continue; }
+          if (/^[-*]\s/.test(l)) { items.push(inlineMd(esc(l.slice(2)))); j++; }
+          else break;
+        }
+        if (items.length) {
+          html += `<div class="md-card"><div class="md-card-title">${title}</div><ul class="md-card-list">${items.map(it => `<li>${it}</li>`).join('')}</ul></div>`;
+          i = j;
+        } else {
+          html += `<h3 class="md-h3">${title}</h3>`;
+          i++;
+        }
+        continue;
+      }
+
+      /* ── Numbered list ── */
+      const olMatch = line.match(/^(\d+)\.\s(.+)/);
+      if (olMatch) {
+        if (!inList || listTag !== 'ol') { closeList(); html += '<ol class="md-ol">'; inList = true; listTag = 'ol'; }
+        html += `<li>${inlineMd(esc(olMatch[2]))}</li>`;
+        i++; continue;
+      }
+
+      /* ── Unordered list ── */
+      if (/^[-*]\s/.test(line)) {
+        if (!inList || listTag !== 'ul') { closeList(); html += '<ul class="md-list">'; inList = true; listTag = 'ul'; }
+        html += `<li>${inlineMd(esc(line.slice(2)))}</li>`;
+        i++; continue;
+      }
+
+      /* ── Blank line ── */
+      if (line.trim() === '') {
+        closeList();
+        i++; continue;
+      }
+
+      /* ── Paragraph ── */
+      closeList();
+      html += `<p class="md-p">${inlineMd(esc(line))}</p>`;
+      i++;
+    }
+
+    closeList();
+    if (inCodeBlock && codeLines.length) {
+      html += `<div class="md-code-block"><pre><code>${esc(codeLines.join('\n'))}</code></pre></div>`;
+    }
+    return html;
   }
 
   /* ══════════════════════════════════════════════
