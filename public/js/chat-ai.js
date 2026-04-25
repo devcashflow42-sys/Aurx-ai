@@ -797,6 +797,41 @@
   const logoutBtn = document.getElementById('logout-btn');
   if (logoutBtn) logoutBtn.addEventListener('click', logout);
 
+  /* ── Copy-code button delegation ── */
+  messages.addEventListener('click', function (e) {
+    const btn = e.target.closest('.md-copy-btn');
+    if (!btn) return;
+    const codeEl = btn.closest('.md-code-block')?.querySelector('pre code');
+    if (!codeEl) return;
+    const text = codeEl.innerText || codeEl.textContent || '';
+
+    function markCopied() {
+      btn.classList.add('copied');
+      const lbl = btn.querySelector('.md-copy-label');
+      if (lbl) lbl.textContent = 'Copiado';
+      setTimeout(function () {
+        btn.classList.remove('copied');
+        if (lbl) lbl.textContent = 'Copiar';
+      }, 2000);
+    }
+
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(text).then(markCopied).catch(function () { legacyCopy(text); markCopied(); });
+    } else {
+      legacyCopy(text); markCopied();
+    }
+  });
+
+  function legacyCopy(text) {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.cssText = 'position:fixed;top:-9999px;left:-9999px;opacity:0';
+    document.body.appendChild(ta);
+    ta.select();
+    try { document.execCommand('copy'); } catch { /* ignore */ }
+    document.body.removeChild(ta);
+  }
+
   /* ══════════════════════════════════════════════
      SEND MESSAGE — calls real API
   ══════════════════════════════════════════════ */
@@ -816,66 +851,211 @@
     input.value = ''; input.style.height = 'auto';
     clearAllFiles(); updateSendBtn();
 
-    // Show typing indicator
-    const typingId = addTyping();
+    const typingId = addStatusIndicator(text);
 
-    fetch(API_BASE + '/api/ai/chat', {
-      method: 'POST',
-      credentials: 'include',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ prompt: text, model: selectedModelId }),
-    })
-    .then(function (res) {
-      if (res.status === 401) { logout(); return null; }
-      return res.json();
-    })
-    .then(function (data) {
-      removeTyping(typingId);
-      if (!data) return;
-      if (!data.success) {
-        addMsg('ai', '⚠️ ' + (data.message || 'Error al obtener respuesta.'), [], true);
-        return;
-      }
-      addMsg('ai', data.data.response, [], true);
-    })
-    .catch(function () {
+    streamAI(text, typingId).catch(function () {
       removeTyping(typingId);
       addMsg('ai', '⚠️ Error de conexión. Verifica tu red e intenta de nuevo.', [], true);
     });
   }
 
   /* ══════════════════════════════════════════════
-     TYPING INDICATOR helpers
+     STATUS INDICATOR + STREAMING helpers
   ══════════════════════════════════════════════ */
   let _typingCounter = 0;
 
-  function addTyping() {
-    const id   = 'typing-' + (++_typingCounter);
+  /* Context detection: returns {label, color} or null */
+  function detectContext(prompt) {
+    const p = prompt;
+    const checks = [
+      [/código|program[ao]|función|function|script|api|backend|frontend|bug|debug|clase|método|loop|array|react|node|python/i, 'Programando',         '#10b981'],
+      [/diseño|layout|ui|ux|página|webpage|componente|css|html|style|interfaz/i,                                              'Diseñando interfaz',   '#8b5cf6'],
+      [/imagen|foto|ilustración|logo|dibujo|picture|render|generar imagen/i,                                                  'Generando imagen',     '#ec4899'],
+      [/escribe|redacta|artículo|texto|ensayo|email|blog|carta|mensaje/i,                                                     'Escribiendo',          '#f59e0b'],
+      [/analiza|explica|compara|describe|revisar|review/i,                                                                    'Analizando',           '#3b82f6'],
+      [/traduce|traducción|translation|translate/i,                                                                           'Traduciendo',          '#06b6d4'],
+      [/resumen|resume|summary|sintetiza/i,                                                                                   'Resumiendo',           '#f97316'],
+    ];
+    for (const [re, label, color] of checks) {
+      if (re.test(p)) return { label, color };
+    }
+    return null;
+  }
+
+  const STATUS_DEFAULTS = ['Analizando solicitud', 'Procesando contexto', 'Generando respuesta', 'Finalizando'];
+
+  function addStatusIndicator(userPrompt) {
+    const id      = 'typing-' + (++_typingCounter);
+    const context = detectContext(userPrompt);
+    const statuses = context ? [context.label] : STATUS_DEFAULTS;
+
     const wrap = document.createElement('div');
     wrap.className = 'msg ai';
     wrap.id = id;
 
     const av = document.createElement('div');
-    av.className = 'msg-av'; av.textContent = 'A'; av.setAttribute('aria-hidden', 'true');
+    av.className = 'msg-av';
+    av.setAttribute('aria-hidden', 'true');
+
+    const body = document.createElement('div');
+    Object.assign(body.style, { display:'flex', flexDirection:'column', gap:'6px', alignItems:'flex-start', maxWidth:'100%', width:'100%' });
+
+    const indicator = document.createElement('div');
+    indicator.className = 'status-indicator';
+    indicator.setAttribute('data-testid', 'ai-status-indicator');
+    indicator.setAttribute('aria-live', 'polite');
+
+    const dotEl = document.createElement('span');
+    dotEl.className = 'status-dot-pulse';
+    if (context) dotEl.style.background = context.color;
+
+    const labelEl = document.createElement('span');
+    labelEl.className = 'status-label';
+    labelEl.textContent = statuses[0];
+
+    const dotsEl = document.createElement('span');
+    dotsEl.className = 'status-animated-dots';
+    dotsEl.innerHTML = '<span></span><span></span><span></span>';
+
+    indicator.append(dotEl, labelEl, dotsEl);
+    body.appendChild(indicator);
+    wrap.append(av, body);
+    messages.appendChild(wrap);
+
+    /* Rotate labels for default sequence */
+    let phase = 1;
+    const interval = context ? null : setInterval(function () {
+      labelEl.style.opacity = '0';
+      labelEl.style.transform = 'translateY(-4px)';
+      setTimeout(function () {
+        labelEl.textContent = statuses[phase % statuses.length];
+        phase++;
+        labelEl.style.transition = 'none';
+        labelEl.style.transform = 'translateY(4px)';
+        requestAnimationFrame(function () {
+          requestAnimationFrame(function () {
+            labelEl.style.transition = '';
+            labelEl.style.opacity = '1';
+            labelEl.style.transform = 'translateY(0)';
+          });
+        });
+      }, 180);
+    }, 1800);
+
+    wrap._stopStatus = function () { interval && clearInterval(interval); };
+
+    requestAnimationFrame(function () { chatBody.scrollTo({ top: chatBody.scrollHeight, behavior: 'smooth' }); });
+    return id;
+  }
+
+  function removeTyping(id) {
+    const el = document.getElementById(id);
+    if (el) { el._stopStatus && el._stopStatus(); el.remove(); }
+  }
+
+  /* Creates the AI message shell and returns the bubble div */
+  function createStreamingBubble() {
+    const wrap = document.createElement('div');
+    wrap.className = 'msg ai';
+
+    const av = document.createElement('div');
+    av.className = 'msg-av';
+    av.setAttribute('aria-hidden', 'true');
 
     const body = document.createElement('div');
     Object.assign(body.style, { display:'flex', flexDirection:'column', gap:'6px', alignItems:'flex-start', maxWidth:'100%', width:'100%' });
 
     const bubble = document.createElement('div');
     bubble.className = 'msg-bubble';
-    bubble.innerHTML = '<span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span>';
-    bubble.style.cssText = 'display:flex;gap:5px;align-items:center;padding:10px 0;';
 
     body.appendChild(bubble);
     wrap.append(av, body);
     messages.appendChild(wrap);
-    requestAnimationFrame(() => chatBody.scrollTo({ top: chatBody.scrollHeight, behavior: 'smooth' }));
-    return id;
+    return bubble;
   }
 
-  function removeTyping(id) {
-    const el = document.getElementById(id);
-    if (el) el.remove();
+  /* Streaming fetch — SSE from /api/ai/stream */
+  async function streamAI(text, typingId) {
+    const res = await fetch(API_BASE + '/api/ai/stream', {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prompt: text, model: selectedModelId }),
+    });
+
+    if (res.status === 401) { logout(); return; }
+
+    /* Fallback: server doesn't support streaming yet */
+    if (!res.ok || res.headers.get('content-type')?.includes('application/json')) {
+      const data = await res.json().catch(() => ({}));
+      removeTyping(typingId);
+      if (data.success) addMsg('ai', data.data.response, [], true);
+      else addMsg('ai', '⚠️ ' + (data.message || 'Error al obtener respuesta.'), [], true);
+      return;
+    }
+
+    const reader  = res.body.getReader();
+    const decoder = new TextDecoder();
+    let   sseBuf  = '';
+    let   textBuf = '';
+    let   bubble  = null;
+    let   renderTmr;
+
+    function scheduleRender() {
+      clearTimeout(renderTmr);
+      renderTmr = setTimeout(function () {
+        if (!bubble) return;
+        bubble.innerHTML = parseMarkdown(textBuf) + '<span class="typing-cursor" aria-hidden="true">▋</span>';
+        chatBody.scrollTo({ top: chatBody.scrollHeight, behavior: 'smooth' });
+      }, 60);
+    }
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      sseBuf += decoder.decode(value, { stream: true });
+      const lines = sseBuf.split('\n');
+      sseBuf = lines.pop();
+
+      for (const line of lines) {
+        if (!line.startsWith('data: ')) continue;
+        const raw = line.slice(6).trim();
+        if (raw === '[DONE]') { sseBuf = ''; break; }
+
+        let parsed;
+        try { parsed = JSON.parse(raw); } catch { continue; }
+
+        if (parsed.error) throw new Error(parsed.error);
+
+        if (parsed.token) {
+          if (!bubble) {
+            removeTyping(typingId);
+            bubble = createStreamingBubble();
+          }
+          textBuf += parsed.token;
+          scheduleRender();
+        }
+      }
+    }
+
+    clearTimeout(renderTmr);
+    if (bubble) {
+      bubble.innerHTML = parseMarkdown(textBuf);
+      applyHighlighting(bubble);
+    } else {
+      removeTyping(typingId);
+      addMsg('ai', '⚠️ No se recibió respuesta del servidor.', [], true);
+    }
+  }
+
+  /* Apply highlight.js to unhighlighted code blocks */
+  function applyHighlighting(container) {
+    if (typeof hljs === 'undefined') return;
+    container.querySelectorAll('.md-code-block pre code:not([data-hljs])').forEach(function (el) {
+      hljs.highlightElement(el);
+      el.dataset.hljs = '1';
+    });
   }
 
   function addMsg(role, text, files, persist) {
@@ -982,18 +1162,23 @@
       }
       if (inCodeBlock) {
         if (line.trim() === '```') {
-          /* build header: badge or plain language label */
+          /* build header: badge or plain language label + copy button */
+          const COPY_ICON  = `<svg class="copy-icon"  width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>`;
+          const CHECK_ICON = `<svg class="check-icon" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>`;
+          const copyBtn    = `<button class="md-copy-btn" aria-label="Copiar código" data-testid="copy-code-btn">${COPY_ICON}${CHECK_ICON}<span class="md-copy-label">Copiar</span></button>`;
           let header = '';
+          const langClass = codeLang ? `language-${codeLang}` : '';
           if (pendingBadge) {
             const badge = `<span class="md-file-badge">${esc(pendingBadge.lang)}</span>`;
             const fname = pendingBadge.filename
               ? `<span class="md-file-name">${esc(pendingBadge.filename)}</span>` : '';
-            header = `<div class="md-code-header">${badge}${fname}</div>`;
+            header = `<div class="md-code-header"><span class="md-code-lang-wrap">${badge}${fname}</span>${copyBtn}</div>`;
             pendingBadge = null;
-          } else if (codeLang) {
-            header = `<div class="md-code-header"><span class="md-code-lang-lbl">${esc(codeLang)}</span></div>`;
+          } else {
+            const lbl = codeLang ? `<span class="md-code-lang-lbl">${esc(codeLang)}</span>` : '';
+            header = `<div class="md-code-header"><span class="md-code-lang-wrap">${lbl}</span>${copyBtn}</div>`;
           }
-          html += `<div class="md-code-block">${header}<pre><code>${esc(codeLines.join('\n'))}</code></pre></div>`;
+          html += `<div class="md-code-block">${header}<div class="md-code-body"><pre><code class="${langClass}">${esc(codeLines.join('\n'))}</code></pre></div></div>`;
           inCodeBlock = false; codeLines = []; codeLang = '';
         } else {
           codeLines.push(line);
@@ -1112,7 +1297,8 @@
 
     closeList();
     if (inCodeBlock && codeLines.length) {
-      html += `<div class="md-code-block"><pre><code>${esc(codeLines.join('\n'))}</code></pre></div>`;
+      const langClass = codeLang ? `language-${codeLang}` : '';
+      html += `<div class="md-code-block"><div class="md-code-body"><pre><code class="${langClass}">${esc(codeLines.join('\n'))}</code></pre></div></div>`;
     }
     return html;
   }
