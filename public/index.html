@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#e8e8e6">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<title>Aurx AI</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/main.css">
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="logo" style="display:flex;align-items:center;gap:10px;">
+    <div style="width:36px;height:36px;background:#1a1a1a;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polygon points="12 2 2 7 12 12 22 7"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/>
+      </svg>
+    </div>
+    <span style="font-family:'DM Serif Display',serif;font-size:1.4rem;letter-spacing:-0.5px;">Aurx<span style="color:var(--orange);font-style:italic;">AI</span></span>
+  </div>
+  <div class="nav-btns">
+    <button class="btn btn-solid" onclick="location.href='/login?mode=register'">Comenzar Gratis</button>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="section" id="hero">
+  <div class="card fade-up" style="padding:56px 32px 52px;background:var(--card);">
+
+    <!-- Big title -->
+    <h1 class="hero-big-title">CREATE.<br>IMAGINE.</h1>
+
+    <!-- Neural Network Canvas -->
+    <div class="neural-wrap">
+      <canvas id="neuralCanvas" width="560" height="300"></canvas>
+    </div>
+
+    <!-- Label -->
+    <p class="aurx-label">AURX PUEDE</p>
+
+    <!-- Animated typewriter in orange -->
+    <p class="hero-typewriter"><span class="typewriter-wrap" id="tw"></span></p>
+
+    <!-- Description -->
+    <p class="hero-sub">Aurx AI lleva la inteligencia artificial a una nueva era de creatividad y desarrollo más allá de lo convencional.</p>
+
+    <a class="btn-cta" href="/login?mode=register">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <path d="M5 12h14M12 5l7 7-7 7"/>
+        </svg>
+        Comenzar Ahora
+      </a>
+    
+  </div>
+</section>
+
+<!-- BRANDS -->
+<section class="section" id="brands">
+  <div class="card fade-up delay-1">
+    <p class="brands-label">Modelos integrados</p>
+    <div class="brands-row">
+      <span class="brand-chip">GPT-4o</span>
+      <span class="brand-chip">Claude 3.7</span>
+      <span class="brand-chip">Gemini 2.0</span>
+      <span class="brand-chip">Llama 3</span>
+      <span class="brand-chip">Mistral</span>
+      <span class="brand-chip">DALL·E 3</span>
+      <span class="brand-chip">Grok 4.1  </span>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section class="section" id="features">
+  <div class="section-header fade-up delay-2">
+    <span class="pill-label">Funciones</span>
+    <h2><strong>Colabora</strong> con IA para crear <em>resultados impactantes.</em></h2>
+    <p>Todo en un solo lugar, potenciado por los mejores modelos del mundo.</p>
+  </div>
+  <div class="features-grid fade-up delay-3">
+
+    <div class="feat-card">
+      <div class="feat-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="9" width="18" height="12" rx="2"/><path d="M9 9V7a3 3 0 0 1 6 0v2"/><circle cx="9" cy="14" r="1" fill="currentColor"/><circle cx="15" cy="14" r="1" fill="currentColor"/><path d="M9 18h6"/></svg></div>
+      <h3>Múltiples Modelos</h3>
+      <p>Accede a los modelos de IA más avanzados del mercado: GPT-4o, Claude, Gemini y más, todos desde una sola interfaz.</p>
+    </div>
+
+    <div class="feat-card">
+      <div class="feat-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/><path d="M3 11h18"/></svg></div>
+      <h3>Tus Proyectos</h3>
+      <p>Organiza tus conversaciones en proyectos. Guarda contexto, historial y resultados para retomar donde lo dejaste.</p>
+    </div>
+
+    <div class="feat-card">
+      <div class="feat-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a10 10 0 0 1 0 20c-2.5 0-4-1.5-4-3.5 0-1 .5-2 1-3 .7-1.5.7-2.5 0-3.5C8 10.5 8 9 9.5 8c1.5-1 3-1 4.5-.5"/><circle cx="16" cy="9" r="1.2" fill="currentColor"/></svg></div>
+      <h3>Generar Imágenes</h3>
+      <p>Crea imágenes de alta calidad con IA. Desde ilustraciones artísticas hasta renders fotorrealistas con un prompt.</p>
+    </div>
+
+    <div class="feat-card" id="api-feat" style="position:relative;overflow:hidden;">
+      <div class="feat-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="12" r="4"/><path d="m12 12 9 0"/><path d="m18 12 0 3"/><path d="m15 12 0 2"/></svg></div>
+      <div class="coming-soon-badge">Próximamente</div>
+      <h3>Tu API Key</h3>
+      <p>Integra Aurx AI en tus propias aplicaciones y flujos de trabajo con nuestra API REST. Acceso programático completo.</p>
+    </div>
+
+  </div>
+</section>
+
+<!-- QUOTE -->
+<section class="section" id="quote">
+  <div class="card fade-up">
+    <div class="quote-icon">"</div>
+    <p class="quote-text">La inteligencia artificial no reemplaza la creatividad humana — la amplifica hasta límites que antes eran imposibles.</p>
+    <p class="quote-author">— Equipo Aurx AI</p>
+  </div>
+</section>
+
+<!-- COMMUNITY -->
+<section class="section" id="community">
+  <div class="section-header fade-up">
+    <span class="pill-label">Comunidad</span>
+    <h2>Construye con <strong>otros creadores</strong></h2>
+    <p>Únete a la comunidad de Aurx AI. Colabora, comparte y crea junto a otros.</p>
+  </div>
+
+  <!-- Stats bar -->
+  <div class="comm-stats fade-up delay-1">
+    <div class="comm-stat">
+      <span class="comm-stat-num" id="memberCount">10K</span>
+      <span class="comm-stat-label">Miembros</span>
+    </div>
+    <div class="comm-stat-div"></div>
+    <div class="comm-stat">
+      <span class="comm-stat-num">10K</span>
+      <span class="comm-stat-label">Límite</span>
+    </div>
+    <div class="comm-stat-div"></div>
+    <div class="comm-stat">
+      <span class="comm-stat-num">∞</span>
+      <span class="comm-stat-label">Mensajes al día</span>
+    </div>
+  </div>
+
+  <!-- Capacity bar -->
+  <div class="comm-capacity fade-up delay-2">
+    <div class="comm-cap-header">
+      <span>Plazas disponibles</span>
+      <span id="spotsLeft">9,241 restantes</span>
+    </div>
+    <div class="comm-cap-bar">
+      <div class="comm-cap-fill" id="capFill"></div>
+    </div>
+  </div>
+
+  <!-- Feature cards -->
+  <div class="comm-grid fade-up delay-2">
+
+    <div class="comm-card">
+      <div class="comm-card-icon">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      </div>
+      <h3>Chat en tiempo real</h3>
+      <p>Habla con otros miembros cada día. Comparte ideas, resuelve dudas y colabora en tus proyectos.</p>
+    </div>
+
+    <div class="comm-card">
+      <div class="comm-card-icon">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+      </div>
+      <h3>Comparte tu enlace</h3>
+      <p>Publica tu proyecto o app para que otros miembros lo vean, prueben y aporten ideas con IA.</p>
+    </div>
+
+    <div class="comm-card">
+      <div class="comm-card-icon">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+      </div>
+      <h3>Proyectos colaborativos</h3>
+      <p>Forma equipos para construir aplicaciones, páginas web o herramientas usando inteligencia artificial.</p>
+    </div>
+
+    <div class="comm-card">
+      <div class="comm-card-icon">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+      </div>
+      <h3>Solo 10,000 personas</h3>
+      <p>Comunidad cerrada. Una vez llena, no se aceptan más miembros. Reserva tu lugar ahora.</p>
+    </div>
+
+  </div>
+
+  <!-- Live feed mockup -->
+  <div class="comm-feed card fade-up delay-3">
+    <div class="comm-feed-header">
+      <span class="comm-live-dot"></span>
+      <span style="font-size:0.8rem;font-weight:600;letter-spacing:0.05em;text-transform:uppercase;">Actividad reciente</span>
+    </div>
+    <div class="comm-feed-list" id="feedList"></div>
+    <button class="btn-cta" style="margin-top:24px;max-width:340px;">Próximamente</button>
+  </div>
+
+</section>
+
+<!-- PRICING -->
+<section class="section" id="pricing">
+  <div class="section-header fade-up">
+    <span class="pill-label">Planes</span>
+    <h2>Elige tu <strong>plan ideal</strong></h2>
+    <p>Comienza gratis y escala cuando lo necesites.</p>
+  </div>
+
+  <div class="pricing-grid fade-up delay-1">
+
+    <!-- Free -->
+    <div class="plan-card" onclick="selectPlan(this)">
+      <div class="plan-select-tag" style="left:50%;transform:translateX(-50%);">✓ Seleccionado</div>
+      <div class="plan-name">Gratis</div>
+      <div class="plan-price">$0 <span>MXN</span></div>
+      <div class="plan-period">Para siempre</div>
+      <div class="plan-sep"></div>
+      <ul class="plan-features">
+        <li class="nope"><span class="check">✗</span> Modelos avanzados no disponibles</li>
+        <li class="nope"><span class="check">✗</span> Imágenes de calidad no incluidas</li>
+        <li class="nope"><span class="check">✗</span> Sin acceso a API</li>
+        <li><span class="check">✓</span> 100 mensajes por mes</li>
+        <li><span class="check">✓</span> Modelos básicos</li>
+        <li><span class="check">✓</span> Proyectos limitados</li>
+      </ul>
+      <button class="plan-btn plan-btn-light" onclick="location.href='/login?mode=register'">Comenzar gratis</button>
+      <button class="plan-cancel-btn" onclick="event.stopPropagation();cancelPlan(this)">✕ Cancelar selección</button>
+    </div>
+
+    <!-- Básico $250 -->
+    <div class="plan-card" onclick="selectPlan(this)">
+      <div class="plan-select-tag" style="left:50%;transform:translateX(-50%);">✓ Seleccionado</div>
+      <div class="plan-name">Básico</div>
+      <div class="plan-price">$250 <span>MXN</span></div>
+      <div class="plan-period">por mes</div>
+      <div class="plan-sep"></div>
+      <ul class="plan-features">
+        <li><span class="check">✓</span> Más modelos disponibles</li>
+        <li><span class="check">✓</span> Genera imágenes de calidad</li>
+        <li><span class="check">✓</span> 1,500 mensajes por mes</li>
+        <li><span class="check">✓</span> Proyectos ilimitados</li>
+        <li class="nope"><span class="check">✗</span> Acceso a API no incluido</li>
+        <li class="nope"><span class="check">✗</span> Modelos premium limitados</li>
+      </ul>
+      <button class="plan-btn plan-btn-light" onclick="location.href='/login?mode=register'">Elegir Básico</button>
+      <button class="plan-cancel-btn" onclick="event.stopPropagation();cancelPlan(this)">✕ Cancelar selección</button>
+    </div>
+
+    <!-- Pro $450 -->
+    <div class="plan-card featured" onclick="selectPlan(this)">
+      <div class="plan-badge">Popular</div>
+      <div class="plan-select-tag" style="left:50%;transform:translateX(-50%);">✓ Seleccionado</div>
+      <div class="plan-name">Pro</div>
+      <div class="plan-price">$450 <span>MXN</span></div>
+      <div class="plan-period">por mes</div>
+      <div class="plan-sep"></div>
+      <ul class="plan-features">
+        <li><span class="check">✓</span> Todos los modelos disponibles</li>
+        <li><span class="check">✓</span> Más generación de imágenes IA</li>
+        <li><span class="check">✓</span> 2,500 mensajes por mes</li>
+        <li><span class="check">✓</span> Proyectos ilimitados</li>
+        <li><span class="check">✓</span> Prioridad en respuestas</li>
+        <li class="nope"><span class="check">✗</span> Acceso a API (próx.)</li>
+      </ul>
+      <button class="plan-btn plan-btn-dark" onclick="location.href='/login?mode=register'">Elegir Pro</button>
+      <button class="plan-cancel-btn" onclick="event.stopPropagation();cancelPlan(this)">✕ Cancelar selección</button>
+    </div>
+
+    <!-- Mega -->
+    <div class="plan-card mega" onclick="selectPlan(this)">
+      <div class="plan-badge">Todo incluido</div>
+      <div class="plan-select-tag" style="left:50%;transform:translateX(-50%);">✓ Seleccionado</div>
+      <div class="plan-name">Mega</div>
+      <div class="plan-price" style="font-size:1.6rem;">Próximamente</div>
+      <div class="plan-period">el plan definitivo</div>
+      <div class="plan-sep"></div>
+      <ul class="plan-features">
+        <li><span class="check">✓</span> Todo disponible sin límites</li>
+        <li><span class="check">✓</span> Sin límite de modelos de IA</li>
+        <li><span class="check">✓</span> Generación de imágenes premium</li>
+        <li><span class="check">✓</span> 35,000 mensajes diarios</li>
+        <li><span class="check">✓</span> Acceso completo a API</li>
+        <li><span class="check">✓</span> Soporte prioritario 24/7</li>
+      </ul>
+      <button class="plan-btn plan-btn-mega" disabled style="opacity:0.7;cursor:not-allowed;">Muy pronto</button>
+      <button class="plan-cancel-btn" onclick="event.stopPropagation();cancelPlan(this)">✕ Cancelar selección</button>
+    </div>
+
+  </div>
+</section>
+<section class="section" id="cta">
+  <div class="card fade-up">
+      <h2 class="cta-title">Cuéntame sobre tu <em>próximo proyecto</em></h2>
+    <p style="color:var(--muted);margin-bottom:32px;font-size:0.95rem;">Empieza gratis, sin compromisos. 25 mensajes de prueba esperan por ti.</p>
+    <div class="cta-btns">
+      <button class="btn btn-solid" onclick="location.href='/login?mode=register'">Crear cuenta</button>
+      <button class="btn btn-outline" onclick="location.href='/login?mode=login'">Iniciar sesión</button>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <span>© 2024 Aurx AI — Todos los derechos reservados.</span>
+  <div style="display:flex;gap:20px;">
+    <a href="#">LinkedIn</a>
+    <a href="#">Twitter</a>
+    <a href="#">Instagram</a>
+  </div>
+</footer>
+<script src="js/main.js"></script>
+<!-- ── Session-aware nav ── -->
+<script>
+(function () {
+  var raw = sessionStorage.getItem('aurx_user');
+  if (!raw) return; // no session → keep default buttons
+
+  // If logged in, swap "Comenzar Gratis" → "Ir al chat"
+  var navBtn = document.querySelector('nav .btn-solid');
+  if (navBtn) {
+    navBtn.textContent = 'Ir al chat';
+    navBtn.onclick = function () { location.href = '/chat-ai'; };
+  }
+})();
+</script>
+</body>
+</html>
