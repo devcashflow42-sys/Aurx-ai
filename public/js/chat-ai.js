@@ -1010,7 +1010,7 @@
         if (arrowIdx !== -1) {
           const action = inlineMd(esc(content.slice(0, arrowIdx)));
           const result = inlineMd(esc(content.slice(arrowIdx + 3)));
-          html += `<div class="md-step"><span class="md-step-bullet">▶</span><span class="md-step-action">${action}</span><span class="md-step-arrow">→</span><span class="md-step-result">${result}</span></div>`;
+          html += `<div class="md-step"><span class="md-step-bullet">▶</span><div class="md-step-body"><span class="md-step-action">${action}</span><span class="md-step-arrow"> → </span><span class="md-step-result">${result}</span></div></div>`;
         } else {
           html += `<div class="md-step"><span class="md-step-bullet">▶</span><span class="md-step-action">${inlineMd(esc(content))}</span></div>`;
         }
