@@ -1,3 +1,5 @@
+import { SYSTEM_PROMPT } from '../config/system-prompt.js';
+
 export const callGemini = async (apiModel, prompt) => {
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${apiModel}:generateContent?key=${process.env.GOOGLE_AI_API_KEY}`;
 
@@ -5,6 +7,7 @@ export const callGemini = async (apiModel, prompt) => {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
+      systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] },
       contents: [{ parts: [{ text: prompt }] }],
     }),
   });

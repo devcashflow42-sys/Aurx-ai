@@ -962,6 +962,7 @@
     let inCodeBlock = false;
     let codeLang = '';
     let codeLines = [];
+    let pendingBadge = null;   // { lang, filename } set by [ HTML ] — file lines
 
     function closeList() {
       if (inList) { html += `</${listTag}>`; inList = false; }
@@ -975,20 +976,68 @@
       if (fenceMatch && !inCodeBlock) {
         closeList();
         inCodeBlock = true;
-        codeLang = fenceMatch[1] || '';
+        codeLang = fenceMatch[1] || (pendingBadge ? pendingBadge.lang.toLowerCase() : '');
         codeLines = [];
         i++; continue;
       }
       if (inCodeBlock) {
         if (line.trim() === '```') {
-          const langLabel = codeLang
-            ? `<span class="md-code-lang">${esc(codeLang)}</span>` : '';
-          html += `<div class="md-code-block">${langLabel}<pre><code>${esc(codeLines.join('\n'))}</code></pre></div>`;
+          /* build header: badge or plain language label */
+          let header = '';
+          if (pendingBadge) {
+            const badge = `<span class="md-file-badge">${esc(pendingBadge.lang)}</span>`;
+            const fname = pendingBadge.filename
+              ? `<span class="md-file-name">${esc(pendingBadge.filename)}</span>` : '';
+            header = `<div class="md-code-header">${badge}${fname}</div>`;
+            pendingBadge = null;
+          } else if (codeLang) {
+            header = `<div class="md-code-header"><span class="md-code-lang-lbl">${esc(codeLang)}</span></div>`;
+          }
+          html += `<div class="md-code-block">${header}<pre><code>${esc(codeLines.join('\n'))}</code></pre></div>`;
           inCodeBlock = false; codeLines = []; codeLang = '';
         } else {
           codeLines.push(line);
         }
         i++; continue;
+      }
+
+      /* ── Progress step: ▶ action → result ── */
+      const stepMatch = line.match(/^▶\s+(.+)/);
+      if (stepMatch) {
+        closeList();
+        const content = stepMatch[1];
+        const arrowIdx = content.indexOf(' → ');
+        if (arrowIdx !== -1) {
+          const action = inlineMd(esc(content.slice(0, arrowIdx)));
+          const result = inlineMd(esc(content.slice(arrowIdx + 3)));
+          html += `<div class="md-step"><span class="md-step-bullet">▶</span><span class="md-step-action">${action}</span><span class="md-step-arrow">→</span><span class="md-step-result">${result}</span></div>`;
+        } else {
+          html += `<div class="md-step"><span class="md-step-bullet">▶</span><span class="md-step-action">${inlineMd(esc(content))}</span></div>`;
+        }
+        i++; continue;
+      }
+
+      /* ── Result / Error indicator: ✅ … or ❌ … ── */
+      if (line.startsWith('✅ ') || line.startsWith('❌ ')) {
+        closeList();
+        const ok = line.startsWith('✅ ');
+        const content = inlineMd(esc(line.slice(3).trim()));
+        html += `<div class="md-result ${ok ? 'md-result-ok' : 'md-result-err'}"><span class="md-result-icon">${ok ? '✅' : '❌'}</span><span class="md-result-text">${content}</span></div>`;
+        i++; continue;
+      }
+
+      /* ── File badge: [ HTML ] — filename before a code block ── */
+      const badgeMatch = line.match(/^\[\s*([A-Z0-9]+)\s*\](?:\s*(?:—|-)\s*(.+))?$/i);
+      if (badgeMatch) {
+        let j = i + 1;
+        while (j < lines.length && lines[j].trim() === '') j++;
+        if (j < lines.length && /^```/.test(lines[j].trim())) {
+          pendingBadge = {
+            lang:     badgeMatch[1].toUpperCase(),
+            filename: (badgeMatch[2] || '').trim(),
+          };
+          i++; continue;
+        }
       }
 
       /* ── Horizontal rule ── */

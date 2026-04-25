@@ -1,3 +1,5 @@
+import { SYSTEM_PROMPT } from '../config/system-prompt.js';
+
 export const callOpenAI = async (apiModel, prompt) => {
   const response = await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
@@ -7,7 +9,10 @@ export const callOpenAI = async (apiModel, prompt) => {
     },
     body: JSON.stringify({
       model: apiModel,
-      messages: [{ role: 'user', content: prompt }],
+      messages: [
+        { role: 'system', content: SYSTEM_PROMPT },
+        { role: 'user',   content: prompt },
+      ],
     }),
   });
 

@@ -1,3 +1,5 @@
+import { SYSTEM_PROMPT } from '../config/system-prompt.js';
+
 export const callClaude = async (apiModel, prompt) => {
   const response = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
@@ -9,6 +11,7 @@ export const callClaude = async (apiModel, prompt) => {
     body: JSON.stringify({
       model: apiModel,
       max_tokens: 4096,
+      system: SYSTEM_PROMPT,
       messages: [{ role: 'user', content: prompt }],
     }),
   });
