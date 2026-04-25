@@ -859,12 +859,12 @@
     av.className = 'msg-av'; av.textContent = 'A'; av.setAttribute('aria-hidden', 'true');
 
     const body = document.createElement('div');
-    Object.assign(body.style, { display:'flex', flexDirection:'column', gap:'6px', alignItems:'flex-start', maxWidth:'min(75%, 480px)' });
+    Object.assign(body.style, { display:'flex', flexDirection:'column', gap:'6px', alignItems:'flex-start', maxWidth:'100%', width:'100%' });
 
     const bubble = document.createElement('div');
     bubble.className = 'msg-bubble';
     bubble.innerHTML = '<span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span>';
-    bubble.style.cssText = 'display:flex;gap:5px;align-items:center;padding:14px 18px;';
+    bubble.style.cssText = 'display:flex;gap:5px;align-items:center;padding:10px 0;';
 
     body.appendChild(bubble);
     wrap.append(av, body);
@@ -887,7 +887,9 @@
 
     const body = document.createElement('div');
     Object.assign(body.style, { display:'flex', flexDirection:'column', gap:'6px',
-      alignItems: role==='user'?'flex-end':'flex-start', maxWidth:'min(75%, 480px)' });
+      alignItems: role==='user'?'flex-end':'flex-start',
+      maxWidth: role==='ai' ? '100%' : 'min(72%, 480px)',
+      width: role==='ai' ? '100%' : 'auto' });
 
     if (files && files.length) {
       const row = document.createElement('div'); row.className = 'msg-files';

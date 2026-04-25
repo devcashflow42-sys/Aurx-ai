@@ -243,32 +243,46 @@ body {
 
 /* ─── MESSAGES ───────────────────────────────── */
 .messages {
-  width:100%; max-width:680px;
+  width:100%; max-width:720px;
   padding:28px 20px 0; display:none; flex-direction:column;
 }
 .messages.active { display:flex; }
 .msg {
-  display:flex; gap:12px; margin-bottom:24px;
-  opacity:0; transform:translateY(8px);
-  animation:msgIn .2s ease forwards;
+  display:flex; gap:0; margin-bottom:6px;
+  opacity:0; transform:translateY(6px);
+  animation:msgIn .18s ease forwards;
 }
 @keyframes msgIn { to { opacity:1; transform:translateY(0); } }
 .msg.user { flex-direction:row-reverse; }
-.msg-av {
-  width:30px; height:30px; border-radius:50%;
-  display:grid; place-items:center;
-  font-family:'DM Serif Display',serif; font-size:13px;
-  flex-shrink:0; margin-top:3px;
-}
-.msg.ai   .msg-av { background:var(--text); color:#fff; }
-.msg.user .msg-av { background:linear-gradient(135deg,#dedad2,#c5c0b5); color:#5a5650; }
+
+/* Avatares ocultos */
+.msg-av { display:none; }
+
+/* Separación entre grupos de mensajes del mismo rol */
+.msg.ai  + .msg.user,
+.msg.user + .msg.ai  { margin-top:18px; }
+
 .msg-bubble {
-  max-width:min(78%,520px); padding:13px 17px;
+  padding:12px 16px;
   border-radius:18px; font-size:14px; line-height:1.68; word-break:break-word;
 }
-.msg.ai   .msg-bubble { background:var(--surface); border:1px solid var(--border); color:var(--text); border-top-left-radius:5px; }
-.msg.user .msg-bubble { background:var(--text); color:#fff; border-top-right-radius:5px; }
-.msg-files { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:6px; }
+.msg.ai   .msg-bubble {
+  background:transparent; border:none; color:var(--text);
+  border-radius:0; padding:2px 0;
+  max-width:100%; width:100%;
+  font-size:14.5px; line-height:1.72;
+}
+.msg.user .msg-bubble {
+  background:var(--text); color:#fff;
+  border-radius:18px; padding:12px 17px;
+  max-width:100%;
+}
+/* Separación visual cuando cambia el hablante */
+.msg.ai  + .msg.user { padding-top:20px; }
+.msg.user + .msg.ai  { padding-top:20px; }
+
+/* Archivos adjuntos */
+.msg-files { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:8px; }
 .msg-fc {
   border-radius:10px; overflow:hidden;
   box-shadow:var(--sh-xs); cursor:zoom-in;
@@ -1144,14 +1158,14 @@ body.sb-locked { overflow:hidden; }
 }
 /* H3 card — main feature */
 .msg-bubble .md-card {
-  background: var(--bg);
+  background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-l);
   padding: 13px 16px;
   margin: 7px 0;
   transition: box-shadow .18s ease;
 }
-.msg-bubble .md-card:first-child { margin-top: 2px; }
+.msg-bubble .md-card:first-child { margin-top: 4px; }
 .msg-bubble .md-card:hover {
   box-shadow: var(--sh-sm);
 }
