@@ -207,16 +207,6 @@
     });
   }
 
-  /* ── View tabs ────────────────────────────────────────── */
-  document.querySelectorAll('.view-tab').forEach(tab => {
-    tab.addEventListener('click', () => {
-      document.querySelectorAll('.view-tab').forEach(t => t.classList.remove('active'));
-      tab.classList.add('active');
-      if (tab.dataset.view === 'chat') {
-        window.location.href = '/chat';
-      }
-    });
-  });
 
   /* ── Nueva tarea button ───────────────────────────────── */
   const newTaskBtn = document.getElementById('drawer-new-task');

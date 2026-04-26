@@ -33,7 +33,6 @@
   const confirmDeleteBtn = document.getElementById('confirm-delete');
   const input        = document.getElementById('chat-input');
   const sendBtn      = document.getElementById('send-btn');
-  const hero         = document.getElementById('hero');
   const messages     = document.getElementById('messages');
   const chatBody     = document.getElementById('chat-body');
   const inputBox     = document.getElementById('input-box');
@@ -150,7 +149,6 @@
     // Reset UI
     messages.innerHTML = '';
     messages.classList.add('active');
-    hero.style.display = 'none';
     chatActive = true;
     clearAllFiles();
     updateSendBtn();
@@ -179,7 +177,6 @@
     chatActive    = false;
     messages.innerHTML  = '';
     messages.classList.remove('active');
-    hero.style.display  = '';
     input.value         = '';
     input.style.height  = 'auto';
     clearAllFiles();
@@ -766,7 +763,6 @@
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); if (!sendBtn.disabled) sendMessage(); }
   });
   sendBtn.addEventListener('click', sendMessage);
-  window.fillInput = text => { input.value = text; resizeInput(); input.focus(); };
 
   /* ══════════════════════════════════════════════
      NEW CHAT
@@ -827,12 +823,11 @@
     const elName   = document.getElementById('profile-name');
     const elEmail  = document.getElementById('profile-email');
     const elAvatar = document.getElementById('profile-avatar');
-    const heroSub  = document.querySelector('.hero-sub');
+
 
     if (elName)   elName.textContent   = name;
     if (elEmail)  elEmail.textContent  = email;
     if (elAvatar) elAvatar.textContent = initial;
-    if (heroSub)  heroSub.textContent  = 'Hola, ' + name.split(' ')[0] + '. Pregunta lo que quieras.';
 
     if (!IS_CHAT_MODE) renderSidebar();
   })();
@@ -1027,7 +1022,7 @@
   function sendMessage() {
     const text = input.value.trim();
     if (!text && !stagedFiles.length) return;
-    if (!chatActive) { chatActive = true; hero.style.display = 'none'; messages.classList.add('active'); }
+    if (!chatActive) { chatActive = true; messages.classList.add('active'); }
 
     // Start a new conversation if needed
     if (!currentConvId) {
