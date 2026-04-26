@@ -3,166 +3,221 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <meta name="theme-color" content="#eef0fb" />
+  <meta name="theme-color" content="#5ba3d9" />
   <meta name="apple-mobile-web-app-capable" content="yes">
   <title>AuraAI — Inicio</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&family=DM+Serif+Display:ital@0;1&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="css/home.css" />
 </head>
 <body>
 
-<!-- MenuPop Overlay -->
-<div class="mp-overlay" id="mp-overlay" aria-hidden="true"></div>
+<!-- ═══ DRAWER OVERLAY ════════════════════════════ -->
+<div class="drawer-overlay" id="drawer-overlay" aria-hidden="true"></div>
 
-<!-- MenuPop Card -->
-<div class="mp-card" id="mp-card" role="dialog" aria-modal="true" aria-label="Perfil" aria-hidden="true">
-  <div class="mp-handle"></div>
-  <div class="mp-inner">
-    <div class="mp-email" id="mp-email">usuario@ejemplo.com</div>
-
-    <div class="mp-project-row">
-      <div class="mp-proj-avatar" id="mp-proj-avatar">A</div>
-      <div class="mp-proj-meta">
-        <div class="mp-proj-name" id="mp-proj-name">Mi Proyecto</div>
-        <div class="mp-proj-sub">Propietario &bull; 1 miembro</div>
+<!-- ═══ DRAWER (slide from left) ════════════════════════════ -->
+<aside class="drawer" id="drawer" aria-label="Menú lateral">
+  <div class="drawer-head">
+    <div class="drawer-logo">
+      <div class="drawer-logo-mark">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round">
+          <path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/>
+        </svg>
       </div>
-      <button class="mp-switch" aria-label="Cambiar proyecto">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
-      </button>
+      <span>AuraAI</span>
     </div>
-
-    <div class="mp-credits">
-      <div class="mp-credits-top">
-        <span class="mp-credits-label">Créditos</span>
-        <span class="mp-credits-val">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="#8b5cf6"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6L12 2z"/></svg>
-          <strong id="mp-token-count">—</strong>
-        </span>
-      </div>
-      <button class="mp-buy-btn" id="mp-buy-btn">
-        Comprar tokens
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
-      </button>
-    </div>
-
-    <div class="mp-sep"></div>
-
-    <div class="mp-menu">
-      <button class="mp-item">
-        <span class="mp-item-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
-        <span>Comunidad</span>
-        <svg class="mp-chevron" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
-      </button>
-      <button class="mp-item">
-        <span class="mp-item-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></span>
-        <span>Notificaciones</span>
-        <span class="mp-badge">2</span>
-        <svg class="mp-chevron" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
-      </button>
-      <button class="mp-item">
-        <span class="mp-item-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span>
-        <span>Ayuda</span>
-        <svg class="mp-chevron" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
-      </button>
-      <button class="mp-item">
-        <span class="mp-item-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></span>
-        <span>Configuración</span>
-        <svg class="mp-chevron" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
-      </button>
-    </div>
-
-    <div class="mp-sep"></div>
-
-    <button class="mp-logout" id="mp-logout">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-      Cerrar sesión
+    <button class="drawer-collapse" id="drawer-close" aria-label="Cerrar menú">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><polyline points="11 17 6 12 11 7"/><polyline points="18 17 13 12 18 7"/></svg>
     </button>
   </div>
-</div>
 
-<!-- Main Page -->
-<div class="page">
-  <div class="bg-blob blob-1"></div>
-  <div class="bg-blob blob-2"></div>
-  <div class="bg-blob blob-3"></div>
+  <div class="drawer-nav">
+    <button class="drawer-new-task" id="drawer-new-task">
+      <span class="drawer-new-icon">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+      </span>
+      <span>Nueva tarea</span>
+    </button>
+    <button class="drawer-nav-item">
+      <span class="drawer-nav-icon">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+      </span>
+      <span>Generar Imágenes</span>
+      <span class="soon-badge">Pronto</span>
+    </button>
+    <button class="drawer-nav-item">
+      <span class="drawer-nav-icon">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+      </span>
+      <span>Showcase</span>
+    </button>
+  </div>
 
-  <div class="drawer">
-    <!-- Header -->
-    <div class="drawer-head">
-      <a class="logo-wrap" href="/">
-        <div class="logo-mark">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round">
-            <path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/>
-          </svg>
-        </div>
-        <span class="logo-name">AuraAI</span>
-      </a>
-      <button class="icon-btn" aria-label="Colapsar" onclick="window.location.href='/'">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><polyline points="11 17 6 12 11 7"/><polyline points="18 17 13 12 18 7"/></svg>
-      </button>
+  <div class="drawer-body">
+    <div class="drawer-section-label" id="active-label" style="display:none">Tareas activas</div>
+    <div class="conv-list active-list" id="active-list"></div>
+    <div class="drawer-section-label">Conversaciones recientes</div>
+    <div class="conv-list recent-list" id="recent-list">
+      <div class="conv-loading"><div class="conv-spinner"></div></div>
     </div>
+  </div>
 
-    <!-- Quick Actions -->
-    <div class="drawer-actions">
-      <button class="action-new" onclick="window.location.href='/chat'">
-        <span class="action-new-icon">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
-        </span>
-        Nueva tarea
-      </button>
-
-      <button class="action-item" id="action-images">
-        <span class="action-item-icon">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-        </span>
-        Generar Imágenes
-        <span class="soon-badge">Pronto</span>
-      </button>
-
-      <button class="action-item" id="action-session">
-        <span class="action-item-icon">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/><line x1="12" y1="11" x2="12" y2="17"/><line x1="9" y1="14" x2="15" y2="14"/></svg>
-        </span>
-        Nueva sesión de proyecto
-        <span class="soon-badge">Pronto</span>
-      </button>
-    </div>
-
-    <!-- Conversation List -->
-    <div class="drawer-body">
-      <div class="conv-list" id="conv-list">
-        <div class="conv-loading">
-          <div class="conv-spinner"></div>
-        </div>
+  <div class="drawer-foot">
+    <div class="drawer-credits">
+      <div class="credits-left">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="#8b5cf6"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6L12 2z"/></svg>
+        <span id="drawer-token-count">—</span>
       </div>
+      <button class="drawer-buy-btn" id="drawer-buy-btn">
+        Comprar
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v8M8 12h8"/></svg>
+      </button>
     </div>
+    <div class="drawer-profile" id="drawer-profile">
+      <div class="dp-avatar" id="dp-avatar">D</div>
+      <div class="dp-meta">
+        <div class="dp-name" id="dp-name">Dev CashFlow</div>
+        <div class="dp-email" id="dp-email">dev@ejemplo.com</div>
+      </div>
+      <button class="dp-arrow" id="dp-arrow" aria-label="Opciones de cuenta">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+      </button>
+    </div>
+  </div>
+</aside>
 
-    <!-- Footer: tokens + profile -->
-    <div class="drawer-foot">
-      <div class="tokens-row">
-        <div class="tokens-info">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="#8b5cf6"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6L12 2z"/></svg>
-          <span id="token-display">— créditos</span>
-        </div>
-        <button class="buy-btn" id="home-buy-btn">
-          Comprar
-          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+<!-- ═══ HOME PAGE ════════════════════════════════ -->
+<div class="home-page">
+
+  <!-- TOPBAR -->
+  <header class="home-topbar">
+    <div class="topbar-left">
+      <button class="topbar-btn" id="hamburger" aria-label="Abrir menú">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M3 12h18M3 6h18M3 18h12"/></svg>
+      </button>
+      <div class="view-tabs">
+        <button class="view-tab active" data-view="home">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+        </button>
+        <button class="view-tab" data-view="chat">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
         </button>
       </div>
-      <div class="profile-card" id="profile-card">
-        <div class="avatar" id="avatar">D</div>
-        <div class="profile-meta">
-          <div class="profile-name" id="profile-name">Usuario</div>
-          <div class="profile-email" id="profile-email">usuario@ejemplo.com</div>
+    </div>
+    <div class="topbar-right">
+      <button class="buy-credits-btn" id="buy-credits-btn">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6L12 2z"/></svg>
+        Comprar créditos
+      </button>
+      <button class="topbar-btn notif-btn" aria-label="Notificaciones">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- HERO BACKGROUND -->
+  <div class="hero-bg">
+    <div class="cloud cloud-1"></div>
+    <div class="cloud cloud-2"></div>
+    <div class="cloud cloud-3"></div>
+    <div class="cloud cloud-4"></div>
+
+    <!-- Optional promo banner -->
+    <div class="promo-banner" id="promo-banner">
+      <div class="promo-icon">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+      </div>
+      <div class="promo-text">
+        <strong>¡AuraAI Pro disponible!</strong>
+        <span>Genera páginas completas sin límites. Sin expiración.</span>
+      </div>
+      <button class="promo-close" id="promo-close">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+
+    <div class="hero-content">
+      <p class="hero-welcome" id="hero-welcome">BIENVENIDO</p>
+      <h1 class="hero-title">Donde las ideas se hacen realidad</h1>
+      <p class="hero-sub">Crea apps y sitios web funcionales a través de conversaciones simples</p>
+    </div>
+  </div>
+
+  <!-- BOTTOM INPUT AREA -->
+  <div class="home-input-area">
+    <!-- Quick prompt chips -->
+    <div class="quick-chips" id="quick-chips">
+      <button class="chip" onclick="setHomeInput('Crea una Full Stack App para gestión de tareas con autenticación')">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+        Full Stack App
+      </button>
+      <button class="chip" onclick="setHomeInput('Diseña una landing page moderna y profesional para una startup de tecnología')">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+        Landing Page
+      </button>
+      <button class="chip" onclick="setHomeInput('Crea un dashboard de analytics con gráficos y estadísticas en tiempo real')">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        Dashboard
+      </button>
+      <button class="chip" onclick="setHomeInput('Desarrolla un e-commerce completo con catálogo, carrito y checkout')">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+        E-commerce
+      </button>
+      <button class="chip" onclick="setHomeInput('Construye una app SaaS con sistema de suscripción y panel de usuario')">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+        SaaS App
+      </button>
+    </div>
+
+    <!-- Main input box -->
+    <div class="home-input-box" id="home-input-box">
+      <textarea
+        id="home-input"
+        placeholder="Crea una app SaaS para..."
+        rows="1"
+        autocomplete="off"
+        spellcheck="true"
+        aria-label="Escribe lo que quieres crear"
+      ></textarea>
+      <div class="home-input-footer">
+        <div class="home-input-tools">
+          <button class="tool-btn" title="Adjuntar">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+          </button>
+          <button class="tool-btn" title="Idioma">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+          </button>
+          <button class="tool-btn" title="Configuración">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="11" y1="18" x2="13" y2="18"/></svg>
+          </button>
+          <button class="tool-btn" title="Micrófono">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+          </button>
         </div>
-        <button class="mp-toggle" id="mp-toggle" aria-label="Abrir menú de perfil" aria-expanded="false">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"><polyline points="18 15 12 9 6 15"/></svg>
+        <button class="home-send-btn" id="home-send-btn" disabled aria-label="Enviar">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
         </button>
       </div>
     </div>
   </div>
+
+  <!-- FEATURE BAR -->
+  <div class="feature-bar" id="feature-bar">
+    <div class="feature-bar-inner">
+      <div class="fb-logo">
+        <div class="drawer-logo-mark" style="width:22px;height:22px;">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+        </div>
+      </div>
+      <span class="fb-text">Presentando <strong>AuraAI Pro</strong></span>
+      <span class="fb-badge">Beta</span>
+      <button class="fb-arrow" aria-label="Ver más">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      </button>
+    </div>
+  </div>
+
 </div>
 
 <script src="js/home.js"></script>

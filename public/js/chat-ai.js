@@ -865,10 +865,21 @@
     if (tbBack)      tbBack.style.display      = 'block';
     hamburger.setAttribute('aria-label', 'Ir al inicio');
 
-    /* Load conversation from ?id=xxx */
-    const urlId = new URLSearchParams(window.location.search).get('id');
+    /* Load conversation from ?id=xxx, or pre-fill from ?msg=xxx */
+    const urlParams = new URLSearchParams(window.location.search);
+    const urlId  = urlParams.get('id');
+    const urlMsg = urlParams.get('msg');
     if (urlId) {
       loadConv(urlId);
+    } else if (urlMsg) {
+      const decoded = decodeURIComponent(urlMsg);
+      if (input) {
+        input.value = decoded;
+        input.dispatchEvent(new Event('input'));
+        setTimeout(() => sendMessage(), 300);
+      }
+      /* Clean URL so refresh doesn't re-send */
+      history.replaceState(null, '', '/chat');
     }
   }
 
