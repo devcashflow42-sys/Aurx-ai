@@ -126,18 +126,41 @@
   <!-- MAIN -->
   <main class="main">
     <header class="topbar">
+      <!-- Left: hamburger (sidebar mode) or back arrow (/chat mode) -->
       <button class="icon-btn" id="hamburger" aria-label="Abrir menú" aria-expanded="false" aria-controls="sidebar">
-        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M3 12h18M3 6h18M3 18h11"/></svg>
+        <svg class="tb-hamburger" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M3 12h18M3 6h18M3 18h11"/></svg>
+        <svg class="tb-back" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" style="display:none"><polyline points="15 18 9 12 15 6"/></svg>
       </button>
-      <a class="logo" href="/">
-        <div class="logo-mark">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round">
-            <path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/>
-          </svg>
+      <!-- Center -->
+      <div class="topbar-center">
+        <a class="logo tb-logo" href="/">
+          <div class="logo-mark">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round">
+              <path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/>
+            </svg>
+          </div>
+          AuraAI
+        </a>
+        <span class="tb-conv-title" id="conv-title"></span>
+      </div>
+      <!-- Right: token pill + 3-dot menu -->
+      <div class="topbar-right">
+        <button class="token-pill" id="token-pill" title="Mis créditos de IA">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="#8b5cf6"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6L12 2z"/></svg>
+          <span id="topbar-tokens">—</span>
+        </button>
+        <div class="more-wrap" style="position:relative;">
+          <button class="icon-btn tb-more-btn" id="chat-more-btn" aria-label="Más opciones" aria-haspopup="true" aria-expanded="false">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/></svg>
+          </button>
+          <div class="chat-more-menu" id="chat-more-menu" aria-hidden="true">
+            <button class="chat-more-item danger" id="menu-delete">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/></svg>
+              Eliminar conversación
+            </button>
+          </div>
         </div>
-        AuraAI
-      </a>
-      <div style="width:36px;" aria-hidden="true"></div>
+      </div>
     </header>
 
     <div class="chat-body" id="chat-body">
@@ -289,15 +312,31 @@
     <div class="pf-thumb" aria-hidden="true">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
     </div>
-    <span class="pf-label">Ver vista previa</span>
+    <span class="pf-label">Vista previa</span>
     <button class="pf-btn" id="pf-open" aria-label="Abrir vista previa">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
     </button>
   </div>
 
+  <!-- ═══ DELETE CONFIRMATION DIALOG ═══════════════════════ -->
+  <div class="confirm-overlay" id="confirm-overlay" aria-hidden="true">
+    <div class="confirm-dialog" role="dialog" aria-modal="true" aria-label="Confirmar eliminación">
+      <div class="confirm-icon-wrap">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/></svg>
+      </div>
+      <h3 class="confirm-title">Eliminar conversación</h3>
+      <p class="confirm-msg">Esta acción eliminará permanentemente la conversación y todo su historial. No se puede deshacer.</p>
+      <div class="confirm-btns">
+        <button class="confirm-cancel" id="confirm-cancel">Cancelar</button>
+        <button class="confirm-delete" id="confirm-delete">Eliminar</button>
+      </div>
+    </div>
+  </div>
+
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script src="js/chat-ai.js"></script>
 <script src="js/fullscreen-nav.js"></script>
 

@@ -60,7 +60,10 @@ body {
   position:fixed; top:0; left:0; bottom:0;
   width:var(--sidebar-w); max-width:85vw;
   display:flex; flex-direction:column;
-  background:var(--surface); border-right:1px solid var(--border);
+  background:rgba(247,247,246,0.84);
+  backdrop-filter:blur(22px) saturate(150%);
+  -webkit-backdrop-filter:blur(22px) saturate(150%);
+  border-right:1px solid rgba(229,229,226,0.55);
   z-index:110; transform:translateX(-100%);
   transition:transform .24s cubic-bezier(.4,0,.2,1);
   will-change:transform; backface-visibility:hidden;
@@ -1644,3 +1647,123 @@ body.sb-locked { overflow:hidden; }
     border-radius: 0;
   }
 }
+
+/* ═══════════════════════════════════════════════════════════
+   NEW TOPBAR ELEMENTS
+═══════════════════════════════════════════════════════════ */
+.topbar-center {
+  flex:1; display:flex; align-items:center; justify-content:center;
+  min-width:0; gap:0;
+}
+.tb-logo { flex-shrink:0; }
+.tb-conv-title {
+  font-size:14px; font-weight:600; color:var(--text);
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  max-width:200px; display:none;
+}
+.topbar-right {
+  display:flex; align-items:center; gap:4px; flex-shrink:0;
+}
+.token-pill {
+  display:flex; align-items:center; gap:4px;
+  padding:5px 11px;
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:20px; font-family:inherit; font-size:12.5px;
+  font-weight:700; color:var(--text-2); cursor:pointer;
+  transition:background var(--ease);
+  white-space:nowrap;
+}
+.token-pill:hover { background:var(--surface-h); }
+
+/* 3-dot menu */
+.tb-more-btn { color:var(--text-2); }
+.chat-more-menu {
+  position:absolute; right:0; top:calc(100% + 4px);
+  background:var(--bg); border:1px solid var(--border);
+  border-radius:var(--radius-m); box-shadow:var(--sh-md);
+  min-width:210px; z-index:300; overflow:hidden;
+  opacity:0; pointer-events:none;
+  transform:translateY(-6px) scale(0.97);
+  transition:opacity 0.15s, transform 0.15s;
+  transform-origin:top right;
+}
+.chat-more-menu.show {
+  opacity:1; pointer-events:all; transform:translateY(0) scale(1);
+}
+.chat-more-item {
+  display:flex; align-items:center; gap:9px;
+  width:100%; padding:12px 14px;
+  background:transparent; border:none;
+  font-family:inherit; font-size:13.5px; font-weight:500;
+  cursor:pointer; text-align:left;
+  transition:background 0.15s;
+}
+.chat-more-item:hover { background:var(--surface); }
+.chat-more-item.danger { color:#ef4444; }
+.chat-more-item.danger:hover { background:rgba(239,68,68,0.06); }
+
+/* ═══════════════════════════════════════════════════════════
+   DELETE CONFIRMATION DIALOG
+═══════════════════════════════════════════════════════════ */
+.confirm-overlay {
+  position:fixed; inset:0; z-index:400;
+  background:rgba(0,0,0,0.46);
+  display:flex; align-items:center; justify-content:center;
+  padding:20px;
+  opacity:0; pointer-events:none;
+  transition:opacity 0.22s ease;
+  backdrop-filter:blur(4px);
+  -webkit-backdrop-filter:blur(4px);
+}
+.confirm-overlay.show { opacity:1; pointer-events:all; }
+
+.confirm-dialog {
+  background:#fff; border-radius:22px;
+  padding:28px 24px 24px;
+  max-width:340px; width:100%;
+  box-shadow:0 20px 64px rgba(0,0,0,0.22);
+  transform:scale(0.93) translateY(8px);
+  transition:transform 0.25s cubic-bezier(0.32,0.72,0,1);
+}
+.confirm-overlay.show .confirm-dialog { transform:scale(1) translateY(0); }
+
+.confirm-icon-wrap {
+  width:60px; height:60px; border-radius:50%;
+  background:rgba(239,68,68,0.1);
+  display:flex; align-items:center; justify-content:center;
+  margin:0 auto 18px; color:#ef4444;
+}
+.confirm-title {
+  font-size:17px; font-weight:700; text-align:center;
+  margin-bottom:8px; color:#111;
+}
+.confirm-msg {
+  font-size:13.5px; color:#6b6b67; text-align:center;
+  line-height:1.55; margin-bottom:24px;
+}
+.confirm-btns { display:flex; gap:10px; }
+.confirm-cancel {
+  flex:1; padding:13px;
+  border:1.5px solid var(--border); border-radius:14px;
+  background:transparent; font-family:inherit;
+  font-size:14px; font-weight:600; color:var(--text-2);
+  cursor:pointer; transition:background 0.15s;
+}
+.confirm-cancel:hover { background:var(--surface); }
+.confirm-delete {
+  flex:1; padding:13px;
+  border:none; border-radius:14px;
+  background:#ef4444; color:#fff;
+  font-family:inherit; font-size:14px; font-weight:600;
+  cursor:pointer; transition:background 0.15s;
+}
+.confirm-delete:hover { background:#dc2626; }
+
+/* ═══════════════════════════════════════════════════════════
+   DOWNLOAD BUTTON (alongside preview)
+═══════════════════════════════════════════════════════════ */
+.ai-action-btn.btn-download {
+  background:#111110;
+  color:#fff;
+}
+.ai-action-btn.btn-download:hover { background:#232320; }

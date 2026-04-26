@@ -70,7 +70,9 @@ app.use('/api', apiRoutes);
 ───────────────────────────────────────────── */
 app.get('/',          (_req, res) => res.sendFile(path.join(PUBLIC, 'index.html')));
 app.get('/login',     (_req, res) => res.sendFile(path.join(PUBLIC, 'login.html')));
-app.get('/chat-ai',   (_req, res) => res.sendFile(path.join(PUBLIC, 'chat-ai.html')));
+app.get('/home',      (_req, res) => res.sendFile(path.join(PUBLIC, 'home.html')));
+app.get('/chat',      (_req, res) => res.sendFile(path.join(PUBLIC, 'chat-ai.html')));
+app.get('/chat-ai',   (_req, res) => res.redirect('/chat'));
 app.get('/projects',  (_req, res) => res.sendFile(path.join(PUBLIC, 'projects.html')));
 
 /* ─────────────────────────────────────────────

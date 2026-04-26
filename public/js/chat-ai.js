@@ -9,12 +9,28 @@
   /* ══════════════════════════════════════════════
      ELEMENTS
   ══════════════════════════════════════════════ */
+  /* ── /chat page detection ── */
+  const IS_CHAT_MODE = window.location.pathname === '/chat';
+
   const sidebar      = document.getElementById('sidebar');
   const overlay      = document.getElementById('overlay');
   const hamburger    = document.getElementById('hamburger');
   const sbClose      = document.getElementById('sb-close');
   const btnNew       = document.getElementById('btn-new');
   const sbChatList   = document.getElementById('sb-chat-list');
+
+  /* ── New topbar elements ── */
+  const tbBack        = hamburger?.querySelector('.tb-back');
+  const tbHamburger   = hamburger?.querySelector('.tb-hamburger');
+  const tbLogo        = document.getElementById('topbar-logo') || document.querySelector('.tb-logo');
+  const convTitleEl   = document.getElementById('conv-title');
+  const topbarTokens  = document.getElementById('topbar-tokens');
+  const chatMoreBtn   = document.getElementById('chat-more-btn');
+  const chatMoreMenu  = document.getElementById('chat-more-menu');
+  const menuDelete    = document.getElementById('menu-delete');
+  const confirmOverlay = document.getElementById('confirm-overlay');
+  const confirmCancel  = document.getElementById('confirm-cancel');
+  const confirmDeleteBtn = document.getElementById('confirm-delete');
   const input        = document.getElementById('chat-input');
   const sendBtn      = document.getElementById('send-btn');
   const hero         = document.getElementById('hero');
@@ -100,16 +116,18 @@
     if (!currentConvId || !currentMsgs.length) return;
     clearTimeout(_saveTimer);
     _saveTimer = setTimeout(async () => {
+      const title = genTitle(currentMsgs[0]?.text || '');
       await apiFetch('/', {
         method: 'POST',
         body: JSON.stringify({
           id:       currentConvId,
-          title:    genTitle(currentMsgs[0]?.text || ''),
+          title,
           model:    selectedModelId,
           messages: currentMsgs,
         }),
       });
-      renderSidebar();   // refresh list after save
+      updateChatTitle(title);
+      if (!IS_CHAT_MODE) renderSidebar();
     }, 600);
   }
 
@@ -145,8 +163,12 @@
     currentMsgs.forEach(msg => addMsg(msg.role, msg.text, [], false));
     requestAnimationFrame(() => chatBody.scrollTo({ top: chatBody.scrollHeight, behavior: 'smooth' }));
 
-    closeSidebar();
-    renderSidebar();   // refresh active highlight
+    updateChatTitle(conv.title);
+
+    if (!IS_CHAT_MODE) {
+      closeSidebar();
+      renderSidebar();
+    }
   }
 
   /** Start fresh chat */
@@ -162,9 +184,15 @@
     input.style.height  = 'auto';
     clearAllFiles();
     updateSendBtn();
-    closeSidebar();
+    if (!IS_CHAT_MODE) closeSidebar();
     chatBody.scrollTo({ top: 0, behavior: 'smooth' });
-    renderSidebar();
+    if (!IS_CHAT_MODE) renderSidebar();
+    /* Reset topbar title in /chat mode */
+    if (IS_CHAT_MODE && convTitleEl) {
+      convTitleEl.style.display = 'none';
+      const logo = document.querySelector('.tb-logo');
+      if (logo) logo.style.display = '';
+    }
     /* Hide floating preview card and clear stored files */
     wbFiles = {};
     const pf = document.getElementById('preview-float');
@@ -186,6 +214,7 @@
 
   /** Fetch list from Firebase and render sidebar */
   async function renderSidebar() {
+    if (!sbChatList) return;   // not present in /chat mode
     const res = await apiFetch('/');
     if (!res) return;
     const all = res.data || [];
@@ -226,7 +255,13 @@
         del.addEventListener('click', e => { e.stopPropagation(); deleteConv(conv.id); });
 
         btn.append(title, del);
-        btn.addEventListener('click', () => loadConv(conv.id));
+        btn.addEventListener('click', () => {
+          if (IS_CHAT_MODE) {
+            window.location.href = '/chat?id=' + encodeURIComponent(conv.id);
+          } else {
+            loadConv(conv.id);
+          }
+        });
         sbChatList.appendChild(btn);
       });
     });
@@ -247,7 +282,13 @@
     hamburger.setAttribute('aria-expanded','false');
     setTimeout(() => overlay.classList.remove('show'), 220);
   }
-  hamburger.addEventListener('click', openSidebar);
+  hamburger.addEventListener('click', () => {
+    if (IS_CHAT_MODE) {
+      window.location.href = '/home';
+    } else {
+      openSidebar();
+    }
+  });
   sbClose.addEventListener('click', closeSidebar);
   overlay.addEventListener('click', () => { closeSidebar(); closeAllMenus(); });
 
@@ -793,13 +834,146 @@
     if (elAvatar) elAvatar.textContent = initial;
     if (heroSub)  heroSub.textContent  = 'Hola, ' + name.split(' ')[0] + '. Pregunta lo que quieras.';
 
-    // Render saved conversations on load
-    renderSidebar();
+    if (!IS_CHAT_MODE) renderSidebar();
   })();
 
   // Logout button
   const logoutBtn = document.getElementById('logout-btn');
   if (logoutBtn) logoutBtn.addEventListener('click', logout);
+
+  /* ══════════════════════════════════════════════
+     TOKEN BALANCE (topbar display)
+  ══════════════════════════════════════════════ */
+  (async function loadTokenBalance() {
+    try {
+      const res = await fetch(API_BASE + '/api/users/tokens', { credentials: 'include' });
+      if (!res.ok) return;
+      const data = await res.json();
+      if (data.success && topbarTokens) {
+        const t = data.data?.tokens ?? '—';
+        topbarTokens.textContent = Number(t).toLocaleString('es');
+      }
+    } catch { /* silent */ }
+  })();
+
+  /* ══════════════════════════════════════════════
+     /chat MODE INIT: back arrow + load from URL
+  ══════════════════════════════════════════════ */
+  if (IS_CHAT_MODE) {
+    /* Switch hamburger to back arrow */
+    if (tbHamburger) tbHamburger.style.display = 'none';
+    if (tbBack)      tbBack.style.display      = 'block';
+    hamburger.setAttribute('aria-label', 'Ir al inicio');
+
+    /* Load conversation from ?id=xxx */
+    const urlId = new URLSearchParams(window.location.search).get('id');
+    if (urlId) {
+      loadConv(urlId);
+    }
+  }
+
+  /* ── Update topbar title when in /chat mode ── */
+  function updateChatTitle(title) {
+    if (!IS_CHAT_MODE || !convTitleEl) return;
+    const logo = document.querySelector('.tb-logo');
+    if (logo) logo.style.display = 'none';
+    convTitleEl.style.display  = 'block';
+    convTitleEl.textContent    = title || 'Nueva conversación';
+  }
+
+  /* ══════════════════════════════════════════════
+     3-DOT MENU (delete conversation)
+  ══════════════════════════════════════════════ */
+  function openMoreMenu() {
+    if (!chatMoreMenu) return;
+    chatMoreMenu.classList.add('show');
+    chatMoreMenu.setAttribute('aria-hidden', 'false');
+    chatMoreBtn.setAttribute('aria-expanded', 'true');
+  }
+  function closeMoreMenu() {
+    if (!chatMoreMenu) return;
+    chatMoreMenu.classList.remove('show');
+    chatMoreMenu.setAttribute('aria-hidden', 'true');
+    chatMoreBtn?.setAttribute('aria-expanded', 'false');
+  }
+  if (chatMoreBtn) {
+    chatMoreBtn.addEventListener('click', e => {
+      e.stopPropagation();
+      chatMoreMenu.classList.contains('show') ? closeMoreMenu() : openMoreMenu();
+    });
+  }
+  document.addEventListener('click', e => {
+    if (chatMoreMenu && chatMoreMenu.classList.contains('show') &&
+        !chatMoreMenu.contains(e.target) && e.target !== chatMoreBtn) {
+      closeMoreMenu();
+    }
+  });
+
+  /* ══════════════════════════════════════════════
+     DELETE CONFIRMATION DIALOG
+  ══════════════════════════════════════════════ */
+  function showConfirmDialog() {
+    if (!confirmOverlay) return;
+    confirmOverlay.classList.add('show');
+    confirmOverlay.setAttribute('aria-hidden', 'false');
+  }
+  function hideConfirmDialog() {
+    if (!confirmOverlay) return;
+    confirmOverlay.classList.remove('show');
+    confirmOverlay.setAttribute('aria-hidden', 'true');
+  }
+  if (menuDelete)    menuDelete.addEventListener('click', () => { closeMoreMenu(); showConfirmDialog(); });
+  if (confirmCancel) confirmCancel.addEventListener('click', hideConfirmDialog);
+  if (confirmOverlay) confirmOverlay.addEventListener('click', e => { if (e.target === confirmOverlay) hideConfirmDialog(); });
+  if (confirmDeleteBtn) {
+    confirmDeleteBtn.addEventListener('click', async () => {
+      if (!currentConvId) { hideConfirmDialog(); return; }
+      await deleteConv(currentConvId);
+      hideConfirmDialog();
+      if (IS_CHAT_MODE) window.location.href = '/home';
+    });
+  }
+
+  /* ══════════════════════════════════════════════
+     DOWNLOAD PROJECT (JSZip + random names)
+  ══════════════════════════════════════════════ */
+  const PROJ_ADJS  = ['aurora','stellar','cosmic','neon','crystal','quantum','nova','prism','drift','spark','lunar','zenith','echo','cipher','vortex'];
+  const PROJ_NOUNS = ['garden','portal','flow','canvas','forge','lab','hub','studio','nest','core','wave','atlas','bridge','pulse','craft'];
+
+  function randomProjectName() {
+    const adj  = PROJ_ADJS[Math.floor(Math.random() * PROJ_ADJS.length)];
+    const noun = PROJ_NOUNS[Math.floor(Math.random() * PROJ_NOUNS.length)];
+    const num  = Math.floor(Math.random() * 90) + 10;
+    return `${adj}-${noun}-${num}`;
+  }
+
+  async function downloadProject(files) {
+    const name = randomProjectName();
+
+    if (typeof JSZip !== 'undefined') {
+      const zip    = new JSZip();
+      const folder = zip.folder(name);
+      for (const [filename, { code }] of Object.entries(files)) {
+        folder.file(filename, code);
+      }
+      const blob = await zip.generateAsync({ type: 'blob' });
+      const url  = URL.createObjectURL(blob);
+      const a    = document.createElement('a');
+      a.href = url; a.download = name + '.zip';
+      document.body.appendChild(a); a.click();
+      document.body.removeChild(a); URL.revokeObjectURL(url);
+    } else {
+      /* Fallback: download each file individually */
+      for (const [filename, { code }] of Object.entries(files)) {
+        const blob = new Blob([code], { type: 'text/plain' });
+        const url  = URL.createObjectURL(blob);
+        const a    = document.createElement('a');
+        a.href = url; a.download = filename;
+        document.body.appendChild(a); a.click();
+        document.body.removeChild(a); URL.revokeObjectURL(url);
+      }
+    }
+  }
 
   /* ── Copy-code button delegation ── */
   messages.addEventListener('click', function (e) {
@@ -1623,8 +1797,13 @@
         <button class="ai-action-btn btn-preview">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
           Ver vista previa
+        </button>
+        <button class="ai-action-btn btn-download">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Descargar
         </button>`;
       row.querySelector('.btn-preview').addEventListener('click', openBottomSheet);
+      row.querySelector('.btn-download').addEventListener('click', () => downloadProject(wbFiles));
       bubbleEl.parentElement.appendChild(row);
     }
 
