@@ -1043,6 +1043,104 @@ body.sb-locked { overflow:hidden; }
 .msg-bubble .md-result-icon { font-size: .95rem; flex-shrink: 0; line-height: 1.6; }
 .msg-bubble .md-result-text { flex: 1; }
 
+/* ══════════════════════════════════════════════
+   PIPELINE SYSTEM — substeps, done, options
+══════════════════════════════════════════════ */
+
+/* Substep line: ⚙️ 🎨 ✨ etc. */
+.msg-bubble .pl-sub {
+  display: flex; align-items: center; gap: 8px;
+  padding: 3px 0 3px 20px;
+  font-size: .82rem; color: var(--text-2);
+}
+.msg-bubble .pl-sub-icon { font-size: .9rem; flex-shrink: 0; line-height: 1; }
+.msg-bubble .pl-sub-text { line-height: 1.5; }
+
+/* Completed step: ✓ */
+.msg-bubble .pl-done {
+  display: flex; align-items: center; gap: 8px;
+  padding: 2px 0 2px 20px;
+  font-size: .82rem; color: #10b981;
+  opacity: .85;
+}
+.msg-bubble .pl-done-chk {
+  font-size: .82rem; font-weight: 700; flex-shrink: 0;
+}
+
+/* Option group wrapper */
+.msg-bubble .pl-opts-group {
+  display: flex; flex-wrap: wrap; gap: 7px;
+  margin: 4px 0 8px;
+}
+
+/* Individual option button */
+.msg-bubble .pl-opt {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 7px 14px;
+  border: 1.5px solid var(--border);
+  border-radius: 22px;
+  background: var(--card-bg);
+  font-family: inherit; font-size: .82rem;
+  font-weight: 500; color: var(--text-2);
+  cursor: pointer; white-space: nowrap;
+  transition: border-color .15s, background .15s, color .15s, transform .1s;
+}
+.msg-bubble .pl-opt::before {
+  content: '○'; font-size: .75rem; opacity: .5; flex-shrink: 0;
+  transition: content .1s;
+}
+.msg-bubble .pl-opt:hover {
+  border-color: var(--blue);
+  background: rgba(37,99,235,.05);
+  color: var(--text);
+  transform: translateY(-1px);
+}
+.msg-bubble .pl-opt.selected {
+  border-color: var(--blue);
+  background: rgba(37,99,235,.1);
+  color: var(--blue);
+  font-weight: 600;
+}
+.msg-bubble .pl-opt.selected::before { content: '●'; opacity: 1; }
+
+/* "Comenzar build →" button */
+.msg-bubble .pl-begin-btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  margin-top: 14px; padding: 10px 22px;
+  background: var(--text); color: #fff;
+  border: none; border-radius: 22px;
+  font-family: inherit; font-size: .875rem; font-weight: 600;
+  cursor: pointer;
+  transition: background .15s, transform .12s, opacity .15s;
+  box-shadow: 0 3px 12px rgba(0,0,0,0.2);
+}
+.msg-bubble .pl-begin-btn:disabled {
+  opacity: .35; cursor: default; pointer-events: none;
+}
+.msg-bubble .pl-begin-btn:not(:disabled):hover {
+  background: #232320; transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(0,0,0,0.25);
+}
+
+/* Build completed banner */
+.msg-bubble .md-build-complete {
+  background: linear-gradient(135deg, rgba(16,185,129,.12), rgba(37,99,235,.08));
+  border: 1px solid rgba(16,185,129,.3);
+  border-radius: 12px;
+  padding: 12px 16px;
+  margin: 14px 0 4px;
+  position: relative; overflow: hidden;
+}
+.msg-bubble .md-build-complete .md-result-text {
+  font-size: .9rem; font-weight: 700; color: #10b981;
+}
+.msg-bubble .pl-build-glow {
+  position: absolute; right: -20px; top: -20px;
+  width: 80px; height: 80px;
+  background: radial-gradient(circle, rgba(16,185,129,.25) 0%, transparent 70%);
+  pointer-events: none;
+}
+
 /* ── [ LANG ] file badge on code blocks ── */
 /* ── Code block: header ── */
 .msg-bubble .md-code-header {

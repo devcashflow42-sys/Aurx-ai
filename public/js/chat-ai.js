@@ -765,6 +765,49 @@
   sendBtn.addEventListener('click', sendMessage);
 
   /* ══════════════════════════════════════════════
+     PIPELINE INTERACTIVE OPTIONS (event delegation)
+  ══════════════════════════════════════════════ */
+  messages.addEventListener('click', function (e) {
+    /* Option button click → radio-style selection within group */
+    const opt = e.target.closest('.pl-opt');
+    if (opt) {
+      const group = opt.closest('.pl-opts-group');
+      if (group) {
+        group.querySelectorAll('.pl-opt').forEach(b => b.classList.remove('selected'));
+        opt.classList.add('selected');
+      }
+      /* Enable begin button when at least one option selected */
+      const bbl = opt.closest('.msg-bubble');
+      if (bbl) {
+        const bb = bbl.querySelector('.pl-begin-btn');
+        if (bb) bb.disabled = false;
+      }
+      return;
+    }
+
+    /* Begin build button → collect selections, fill input, send */
+    const bb = e.target.closest('.pl-begin-btn');
+    if (bb && !bb.disabled) {
+      const bbl = bb.closest('.msg-bubble');
+      const parts = [];
+      if (bbl) {
+        bbl.querySelectorAll('.pl-opts-group').forEach(grp => {
+          const sel = grp.querySelector('.pl-opt.selected');
+          if (sel) parts.push(sel.dataset.val);
+        });
+      }
+      if (parts.length) {
+        input.value = parts.join(', ');
+        input.dispatchEvent(new Event('input'));
+        bb.disabled = true;
+        bb.textContent = 'Enviando...';
+        setTimeout(function () { sendMessage(); }, 80);
+      }
+      return;
+    }
+  });
+
+  /* ══════════════════════════════════════════════
      NEW CHAT
   ══════════════════════════════════════════════ */
   btnNew.addEventListener('click', startNewChat);
@@ -1230,6 +1273,14 @@
       /* Save AI response so the conversation persists in Firebase */
       currentMsgs.push({ role: 'ai', text: textBuf });
       persistConv();
+      /* If AI sent option buttons → add "Comenzar build" button */
+      if (bubble.querySelectorAll('.pl-opt').length > 0) {
+        const beginBtn = document.createElement('button');
+        beginBtn.className  = 'pl-begin-btn';
+        beginBtn.disabled   = true;
+        beginBtn.innerHTML  = 'Comenzar build <span aria-hidden="true">→</span>';
+        bubble.appendChild(beginBtn);
+      }
       /* Show preview card + action button if AI generated named code files */
       const detectedFiles = extractFiles(textBuf);
       if (Object.keys(detectedFiles).length > 0) {
@@ -1335,11 +1386,18 @@
     let inCodeBlock = false;
     let codeLang = '';
     let codeLines = [];
-    let pendingBadge = null;   // { lang, filename } set by [ HTML ] — file lines
+    let pendingBadge = null;
+    let inOptGroup  = false;
+
+    const PIPE_EMOJIS = ['⚙️','🎨','✨','🧩','🚀','🔎','🧠','💻','📦'];
 
     function closeList() {
       if (inList) { html += `</${listTag}>`; inList = false; }
     }
+    function closeOptGroup() {
+      if (inOptGroup) { html += '</div>'; inOptGroup = false; }
+    }
+    function closeBoth() { closeList(); closeOptGroup(); }
 
     while (i < lines.length) {
       const line = lines[i];
@@ -1379,6 +1437,31 @@
         i++; continue;
       }
 
+      /* ── Pipeline substep: ⚙️ 🎨 ✨ 🧩 🚀 🔎 🧠 💻 📦 ── */
+      const pipeEmoji = PIPE_EMOJIS.find(e => line.startsWith(e + ' '));
+      if (pipeEmoji) {
+        closeBoth();
+        const txt = line.slice(pipeEmoji.length).trim();
+        html += `<div class="pl-sub"><span class="pl-sub-icon">${pipeEmoji}</span><span class="pl-sub-text">${inlineMd(esc(txt))}</span></div>`;
+        i++; continue;
+      }
+
+      /* ── Pipeline done: ✓ text ── */
+      if (line.startsWith('✓ ')) {
+        closeBoth();
+        html += `<div class="pl-done"><span class="pl-done-chk">✓</span><span>${inlineMd(esc(line.slice(2).trim()))}</span></div>`;
+        i++; continue;
+      }
+
+      /* ── Option button: ( ) text ── */
+      const optMatch = line.match(/^\(\s*\)\s+(.+)/);
+      if (optMatch) {
+        closeList();
+        if (!inOptGroup) { html += '<div class="pl-opts-group">'; inOptGroup = true; }
+        html += `<button class="pl-opt" data-val="${esc(optMatch[1])}">${esc(optMatch[1])}</button>`;
+        i++; continue;
+      }
+
       /* ── Progress step: ▶ action → result ── */
       const stepMatch = line.match(/^▶\s+(.+)/);
       if (stepMatch) {
@@ -1397,10 +1480,12 @@
 
       /* ── Result / Error indicator: ✅ … or ❌ … ── */
       if (line.startsWith('✅ ') || line.startsWith('❌ ')) {
-        closeList();
+        closeBoth();
         const ok = line.startsWith('✅ ');
         const content = inlineMd(esc(line.slice(3).trim()));
-        html += `<div class="md-result ${ok ? 'md-result-ok' : 'md-result-err'}"><span class="md-result-icon">${ok ? '✅' : '❌'}</span><span class="md-result-text">${content}</span></div>`;
+        const isBuild = ok && /build completed/i.test(line);
+        const cls = isBuild ? 'md-result md-result-ok md-build-complete' : `md-result ${ok ? 'md-result-ok' : 'md-result-err'}`;
+        html += `<div class="${cls}"><span class="md-result-icon">${ok ? '✅' : '❌'}</span><span class="md-result-text">${content}</span>${isBuild ? '<span class="pl-build-glow"></span>' : ''}</div>`;
         i++; continue;
       }
 
@@ -1420,28 +1505,28 @@
 
       /* ── Horizontal rule ── */
       if (/^---+$/.test(line.trim()) || /^\*\*\*+$/.test(line.trim())) {
-        closeList();
+        closeBoth();
         html += '<hr class="md-hr">';
         i++; continue;
       }
 
       /* ── H1 ── */
       if (line.startsWith('# ')) {
-        closeList();
+        closeBoth();
         html += `<h1 class="md-h1">${inlineMd(esc(line.slice(2)))}</h1>`;
         i++; continue;
       }
 
       /* ── H2 ── */
       if (line.startsWith('## ')) {
-        closeList();
+        closeBoth();
         html += `<h2 class="md-h2">${inlineMd(esc(line.slice(3)))}</h2>`;
         i++; continue;
       }
 
       /* ── H3 → card if followed by list items ── */
       if (line.startsWith('### ')) {
-        closeList();
+        closeBoth();
         const title = inlineMd(esc(line.slice(4)));
         let j = i + 1;
         const items = [];
@@ -1478,17 +1563,17 @@
 
       /* ── Blank line ── */
       if (line.trim() === '') {
-        closeList();
+        closeBoth();
         i++; continue;
       }
 
       /* ── Paragraph ── */
-      closeList();
+      closeBoth();
       html += `<p class="md-p">${inlineMd(esc(line))}</p>`;
       i++;
     }
 
-    closeList();
+    closeBoth();
     if (inCodeBlock && codeLines.length) {
       const langClass = codeLang ? `language-${codeLang}` : '';
       html += `<div class="md-code-block"><div class="md-code-body"><pre><code class="${langClass}">${esc(codeLines.join('\n'))}</code></pre></div></div>`;
