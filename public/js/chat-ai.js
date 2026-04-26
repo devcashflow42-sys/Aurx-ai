@@ -1535,11 +1535,14 @@
         if (j < lines.length && /^```/.test(lines[j].trim())) {
           j++;
           const codeLines = [];
+          /* Capture until closing ``` OR end of stream (handles truncated responses) */
           while (j < lines.length && lines[j].trim() !== '```') {
             codeLines.push(lines[j]);
             j++;
           }
-          result[filename] = { lang, code: codeLines.join('\n') };
+          if (codeLines.length > 0) {
+            result[filename] = { lang, code: codeLines.join('\n') };
+          }
           i = j + 1;
           continue;
         }

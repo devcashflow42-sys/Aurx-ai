@@ -9,6 +9,7 @@ export const callGrok = async (apiModel, prompt) => {
     },
     body: JSON.stringify({
       model: apiModel,
+      max_tokens: 16000,
       messages: [
         { role: 'system', content: SYSTEM_PROMPT },
         { role: 'user',   content: prompt },

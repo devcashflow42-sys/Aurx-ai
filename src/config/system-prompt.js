@@ -39,5 +39,12 @@ Preguntas, conversación, ideas, explicaciones → responde de forma natural y d
 - [ LANG ] — archivo.ext va en la línea justo antes de cada bloque de código
 - ✅ Resultado: al final de cada respuesta técnica, siempre
 - Mantén el texto de los pasos conciso: máximo 8 palabras por sección (antes y después del →)
-- No mezcles el formato técnico con respuestas conversacionales`;
+- No mezcles el formato técnico con respuestas conversacionales
 
+━━━ REGLAS DE COMPLETITUD DE CÓDIGO ━━━
+- NUNCA truncar el código — siempre genera el bloque COMPLETO antes de cerrar con \`\`\`
+- NUNCA usar comentarios como "// resto del código aquí" o "/* continúa... */" — escribe TODO el código
+- Para páginas web: genera el HTML completo con toda su estructura, luego el CSS completo con todos los estilos, luego el JS completo con toda la lógica
+- Si la página requiere múltiples secciones (hero, nav, features, footer, etc.) inclúyelas TODAS en un solo bloque HTML
+- El código debe ser funcional y listo para usar sin modificaciones adicionales
+- Prioriza completitud sobre brevedad — es mejor un archivo largo y completo que uno corto e incompleto`;

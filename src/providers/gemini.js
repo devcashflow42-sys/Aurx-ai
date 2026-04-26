@@ -9,6 +9,7 @@ export const callGemini = async (apiModel, prompt) => {
     body: JSON.stringify({
       systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] },
       contents: [{ parts: [{ text: prompt }] }],
+      generationConfig: { maxOutputTokens: 16000 },
     }),
   });
 
