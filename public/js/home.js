@@ -46,15 +46,15 @@
     const initial = name.charAt(0).toUpperCase();
     const firstName = name.split(' ')[0];
 
-    const dpAvatar  = document.getElementById('dp-avatar');
-    const dpName    = document.getElementById('dp-name');
-    const dpEmail   = document.getElementById('dp-email');
-    const heroWelcome = document.getElementById('hero-welcome');
+    const dpAvatar = document.getElementById('dp-avatar');
+    const dpName   = document.getElementById('dp-name');
+    const dpEmail  = document.getElementById('dp-email');
+    const homeSub  = document.getElementById('home-sub');
 
-    if (dpAvatar)    dpAvatar.textContent    = initial;
-    if (dpName)      dpName.textContent      = name;
-    if (dpEmail)     dpEmail.textContent     = email;
-    if (heroWelcome) heroWelcome.textContent = 'HOLA, ' + firstName.toUpperCase();
+    if (dpAvatar) dpAvatar.textContent = initial;
+    if (dpName)   dpName.textContent   = name;
+    if (dpEmail)  dpEmail.textContent  = email;
+    if (homeSub)  homeSub.textContent  = 'Hola, ' + firstName + '. ¿Qué quieres crear hoy?';
   })();
 
   /* ── Drawer ───────────────────────────────────────────── */
@@ -194,18 +194,6 @@
   }
   loadConversations();
 
-  /* ── Promo banner close ───────────────────────────────── */
-  const promoClose = document.getElementById('promo-close');
-  const promoBanner = document.getElementById('promo-banner');
-  if (promoClose && promoBanner) {
-    promoClose.addEventListener('click', () => {
-      promoBanner.style.animation = 'none';
-      promoBanner.style.opacity   = '0';
-      promoBanner.style.transform = 'translateY(-12px)';
-      promoBanner.style.transition = 'opacity 0.3s, transform 0.3s';
-      setTimeout(() => { promoBanner.style.display = 'none'; }, 320);
-    });
-  }
 
 
   /* ── Nueva tarea button ───────────────────────────────── */
