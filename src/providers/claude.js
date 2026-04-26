@@ -10,7 +10,7 @@ export async function* streamClaude(apiModel, prompt) {
     },
     body: JSON.stringify({
       model: apiModel,
-      max_tokens: 16000,
+      max_tokens: 32000,
       system: SYSTEM_PROMPT,
       messages: [{ role: 'user', content: prompt }],
       stream: true,
@@ -54,7 +54,7 @@ export const callClaude = async (apiModel, prompt) => {
     },
     body: JSON.stringify({
       model: apiModel,
-      max_tokens: 16000,
+      max_tokens: 32000,
       system: SYSTEM_PROMPT,
       messages: [{ role: 'user', content: prompt }],
     }),

@@ -85,6 +85,11 @@ export const chatStream = async (req, res, next) => {
   res.setHeader('X-Accel-Buffering', 'no');
   res.flushHeaders();
 
+  /* ── Keepalive: send SSE comment every 15 s to beat Render's 60 s proxy timeout ── */
+  const keepAlive = setInterval(() => {
+    if (!res.writableEnded) res.write(': ping\n\n');
+  }, 15000);
+
   let fullText  = '';
   let rawTokens = 0;
 
@@ -142,6 +147,8 @@ export const chatStream = async (req, res, next) => {
       } catch { /* already closed */ }
     }
     if (!res.headersSent) next(err);
+  } finally {
+    clearInterval(keepAlive);
   }
 };
 
