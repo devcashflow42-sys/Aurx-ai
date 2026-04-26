@@ -261,31 +261,6 @@
 
   </main>
 
-  <!-- ═══ WORKBENCH PANEL ═══════════════════════════════════ -->
-  <aside class="workbench" id="workbench" aria-label="Tablero de código" aria-hidden="true">
-    <!-- Top bar: tabs + preview btn + close -->
-    <div class="wb-bar">
-      <div class="wb-tabs" id="wb-tabs" role="tablist" aria-label="Archivos generados"></div>
-      <div class="wb-controls">
-        <!-- Preview button opens BottomSheet -->
-        <button class="wb-preview-fab" id="wb-open-preview" aria-label="Ver resultado" title="Vista previa">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-          <span>Vista previa</span>
-        </button>
-        <button class="wb-close-btn" id="wb-close" aria-label="Cerrar tablero">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
-        </button>
-      </div>
-    </div>
-
-    <!-- Code pane (always shown) -->
-    <div class="wb-pane wb-pane-code" id="wb-pane-code">
-      <div class="wb-code-scroll">
-        <pre id="wb-pre"><code id="wb-code"></code></pre>
-      </div>
-    </div>
-  </aside>
-
   <!-- ═══ PREVIEW BOTTOM SHEET ════════════════════════════ -->
   <div class="bs-overlay" id="bs-overlay" aria-hidden="true"></div>
   <div class="bs-sheet" id="bs-sheet" role="dialog" aria-modal="true" aria-label="Vista previa" aria-hidden="true">
@@ -307,6 +282,17 @@
     <div class="bs-body">
       <iframe id="bs-iframe" title="Vista previa" sandbox="allow-scripts allow-same-origin" loading="lazy"></iframe>
     </div>
+  </div>
+
+  <!-- ═══ FLOATING PREVIEW CARD ════════════════════════════ -->
+  <div class="preview-float" id="preview-float" aria-hidden="true">
+    <div class="pf-thumb" aria-hidden="true">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+    </div>
+    <span class="pf-label">Ver vista previa</span>
+    <button class="pf-btn" id="pf-open" aria-label="Abrir vista previa">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+    </button>
   </div>
 
 </div>

@@ -165,6 +165,10 @@
     closeSidebar();
     chatBody.scrollTo({ top: 0, behavior: 'smooth' });
     renderSidebar();
+    /* Hide floating preview card and clear stored files */
+    wbFiles = {};
+    const pf = document.getElementById('preview-float');
+    if (pf) { pf.classList.remove('show'); pf.setAttribute('aria-hidden','true'); }
   }
 
   /* ── Date group label ── */
@@ -1046,12 +1050,10 @@
       /* Save AI response so the conversation persists in Firebase */
       currentMsgs.push({ role: 'ai', text: textBuf });
       persistConv();
-      /* Open workbench if AI generated named code files */
-      const detectedFiles = (typeof extractFiles === 'function')
-        ? extractFiles(textBuf)
-        : {};
+      /* Show preview card + action button if AI generated named code files */
+      const detectedFiles = extractFiles(textBuf);
       if (Object.keys(detectedFiles).length > 0) {
-        openWorkbench(detectedFiles);
+        onFilesDetected(detectedFiles, bubble);
       }
     } else {
       removeTyping(typingId);
@@ -1501,39 +1503,24 @@
   });
 
   /* ══════════════════════════════════════════════
-     WORKBENCH — split-panel tablero de código
+     PREVIEW — BottomSheet + floating card + action row
   ══════════════════════════════════════════════ */
-  const wbPanel      = document.getElementById('workbench');
-  const wbTabs       = document.getElementById('wb-tabs');
-  const wbPaneCode   = document.getElementById('wb-pane-code');
-  const wbCode       = document.getElementById('wb-code');
-  const wbClose      = document.getElementById('wb-close');
-  const wbOpenPrev   = document.getElementById('wb-open-preview');
-  const shell        = document.querySelector('.shell');
 
   /* ── Bottom Sheet elements ── */
-  const bsOverlay  = document.getElementById('bs-overlay');
-  const bsSheet    = document.getElementById('bs-sheet');
-  const bsIframe   = document.getElementById('bs-iframe');
-  const bsReload   = document.getElementById('bs-reload');
-  const bsExpand   = document.getElementById('bs-expand');
-  const bsClose    = document.getElementById('bs-close');
+  const bsOverlay   = document.getElementById('bs-overlay');
+  const bsSheet     = document.getElementById('bs-sheet');
+  const bsIframe    = document.getElementById('bs-iframe');
+  const bsReload    = document.getElementById('bs-reload');
+  const bsExpand    = document.getElementById('bs-expand');
+  const bsClose     = document.getElementById('bs-close');
 
-  let wbFiles  = {};   // { filename: { lang, code } }
-  let wbActive = null;
+  /* ── Floating preview card ── */
+  const previewFloat = document.getElementById('preview-float');
+  const pfOpen       = document.getElementById('pf-open');
 
-  /* Language → dot colour map */
-  const LANG_DOT = {
-    html: '#f97316', css: '#06b6d4', js: '#f59e0b',
-    javascript: '#f59e0b', typescript: '#3b82f6',
-    python: '#10b981', json: '#8b5cf6',
-  };
+  let wbFiles = {};   // { filename: { lang, code } }
 
-  /**
-   * Extract file blocks from raw AI markdown.
-   * Matches: [ LANG ] — filename  followed (optionally after blank lines) by ```lang … ```
-   * Returns { filename: { lang, code } } or {} if nothing found.
-   */
+  /* ── Extract [ LANG ] — filename code blocks from raw AI text ── */
   function extractFiles(raw) {
     const result = {};
     const lines  = raw.split('\n');
@@ -1562,96 +1549,31 @@
     return result;
   }
 
-  /** Open (or refresh) the workbench with a new set of files */
-  function openWorkbench(files) {
-    wbFiles = files;
-    const names = Object.keys(files);
-    if (!names.length) return;
-
-    /* Build tabs */
-    wbTabs.innerHTML = '';
-    names.forEach(name => {
-      const { lang } = files[name];
-      const dot  = LANG_DOT[lang.toLowerCase()] || '#a0a09c';
-      const btn  = document.createElement('button');
-      btn.className = 'wb-tab';
-      btn.setAttribute('role', 'tab');
-      btn.setAttribute('aria-selected', 'false');
-      btn.dataset.file = name;
-      btn.innerHTML = `<span class="wb-tab-dot" style="background:${dot}"></span>${name}`;
-      btn.addEventListener('click', () => activateTab(name));
-      wbTabs.appendChild(btn);
-    });
-
-    /* Open panel */
-    wbPanel.classList.add('open');
-    wbPanel.setAttribute('aria-hidden', 'false');
-    shell.classList.add('wb-open');
-    activateTab(names[0]);
-
-    /* Show preview fab only if there's an HTML/CSS/JS file */
-    const hasRenderable = names.some(n =>
-      ['HTML','CSS','JS','JAVASCRIPT'].includes(files[n].lang) ||
-      /\.(html?|css|jsx?)$/.test(n)
-    );
-    if (wbOpenPrev) wbOpenPrev.style.display = hasRenderable ? '' : 'none';
-  }
-
-  /** Activate a file tab */
-  function activateTab(filename) {
-    wbActive = filename;
-    wbTabs.querySelectorAll('.wb-tab').forEach(b => {
-      const isActive = b.dataset.file === filename;
-      b.classList.toggle('active', isActive);
-      b.setAttribute('aria-selected', String(isActive));
-    });
-    const entry = wbFiles[filename];
-    if (!entry) return;
-
-    wbCode.className = entry.lang ? `language-${entry.lang.toLowerCase()}` : '';
-    wbCode.textContent = entry.code;
-    wbCode.removeAttribute('data-hljs');
-    if (typeof hljs !== 'undefined') {
-      hljs.highlightElement(wbCode);
-      wbCode.dataset.hljs = '1';
-    }
-  }
-
-  /** Assemble all files and inject into the BottomSheet iframe */
+  /* ── Assemble HTML + CSS + JS and load into iframe ── */
   function renderPreview() {
-    let htmlSrc = '';
-    const names = Object.keys(wbFiles);
+    const names    = Object.keys(wbFiles);
     const htmlFile = names.find(n => wbFiles[n].lang === 'HTML' || /\.html?$/.test(n));
-    if (htmlFile) {
-      htmlSrc = wbFiles[htmlFile].code;
-    } else {
-      htmlSrc = '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Preview</title></head><body></body></html>';
-    }
+    let htmlSrc = htmlFile
+      ? wbFiles[htmlFile].code
+      : '<!DOCTYPE html><html><head><meta charset="UTF-8"></head><body></body></html>';
 
     const cssBlocks = names
       .filter(n => wbFiles[n].lang === 'CSS' || /\.css$/.test(n))
-      .map(n => `<style>\n${wbFiles[n].code}\n</style>`)
-      .join('\n');
+      .map(n => `<style>\n${wbFiles[n].code}\n</style>`).join('\n');
 
     const jsBlocks = names
       .filter(n => ['JS','JAVASCRIPT'].includes(wbFiles[n].lang) || /\.jsx?$/.test(n))
-      .map(n => `<script>\n${wbFiles[n].code}\n<\/script>`)
-      .join('\n');
+      .map(n => `<script>\n${wbFiles[n].code}\n<\/script>`).join('\n');
 
-    if (/<\/head>/i.test(htmlSrc) && cssBlocks)
-      htmlSrc = htmlSrc.replace(/<\/head>/i, cssBlocks + '\n</head>');
-    else if (cssBlocks)
-      htmlSrc = cssBlocks + '\n' + htmlSrc;
-
-    if (/<\/body>/i.test(htmlSrc) && jsBlocks)
-      htmlSrc = htmlSrc.replace(/<\/body>/i, jsBlocks + '\n</body>');
-    else if (jsBlocks)
-      htmlSrc += '\n' + jsBlocks;
+    if (cssBlocks) htmlSrc = /<\/head>/i.test(htmlSrc)
+      ? htmlSrc.replace(/<\/head>/i, cssBlocks + '\n</head>') : cssBlocks + '\n' + htmlSrc;
+    if (jsBlocks)  htmlSrc = /<\/body>/i.test(htmlSrc)
+      ? htmlSrc.replace(/<\/body>/i, jsBlocks + '\n</body>') : htmlSrc + '\n' + jsBlocks;
 
     bsIframe.srcdoc = htmlSrc;
   }
 
-  /* ── BottomSheet open / close ── */
+  /* ── BottomSheet ── */
   function openBottomSheet() {
     renderPreview();
     bsOverlay.classList.add('open');
@@ -1667,38 +1589,59 @@
     bsSheet.setAttribute('aria-hidden', 'true');
     bsOverlay.setAttribute('aria-hidden', 'true');
     document.body.style.overflow = '';
-    /* Small delay before clearing iframe */
     setTimeout(() => { if (!bsSheet.classList.contains('open')) bsIframe.srcdoc = ''; }, 350);
   }
 
-  /** Close workbench */
-  function closeWorkbench() {
-    wbPanel.classList.remove('open');
-    wbPanel.setAttribute('aria-hidden', 'true');
-    shell.classList.remove('wb-open');
-    closeBottomSheet();
-    wbFiles  = {};
-    wbActive = null;
+  /* ── Floating card show / hide ── */
+  function showPreviewFloat() {
+    previewFloat.classList.add('show');
+    previewFloat.setAttribute('aria-hidden', 'false');
+  }
+  function hidePreviewFloat() {
+    previewFloat.classList.remove('show');
+    previewFloat.setAttribute('aria-hidden', 'true');
+  }
+
+  /**
+   * Called from streamAI when AI generates named code files.
+   * Stores files, injects action row into the AI message, and shows floating card.
+   */
+  function onFilesDetected(files, bubbleEl) {
+    wbFiles = files;
+
+    /* Action row below the AI bubble */
+    if (bubbleEl && bubbleEl.parentElement) {
+      const existing = bubbleEl.parentElement.querySelector('.ai-action-row');
+      if (existing) existing.remove();
+
+      const row = document.createElement('div');
+      row.className = 'ai-action-row';
+      row.innerHTML = `
+        <button class="ai-action-btn btn-preview">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          Ver vista previa
+        </button>`;
+      row.querySelector('.btn-preview').addEventListener('click', openBottomSheet);
+      bubbleEl.parentElement.appendChild(row);
+    }
+
+    showPreviewFloat();
   }
 
   /* ── Event listeners ── */
-  wbClose.addEventListener('click', closeWorkbench);
-  if (wbOpenPrev) wbOpenPrev.addEventListener('click', openBottomSheet);
-
   bsOverlay.addEventListener('click', closeBottomSheet);
-  bsClose.addEventListener('click', closeBottomSheet);
-  bsReload.addEventListener('click', renderPreview);
-  bsExpand.addEventListener('click', () => {
+  bsClose.addEventListener('click',   closeBottomSheet);
+  bsReload.addEventListener('click',  renderPreview);
+  bsExpand.addEventListener('click',  () => {
     const isFs = bsSheet.classList.toggle('fullscreen');
     bsExpand.setAttribute('aria-label', isFs ? 'Reducir' : 'Pantalla completa');
   });
 
-  /* Close on Escape */
+  previewFloat.addEventListener('click', openBottomSheet);
+  if (pfOpen) pfOpen.addEventListener('click', e => { e.stopPropagation(); openBottomSheet(); });
+
   document.addEventListener('keydown', e => {
-    if (e.key === 'Escape') {
-      if (bsSheet.classList.contains('open')) { closeBottomSheet(); return; }
-      if (wbPanel.classList.contains('open'))   closeWorkbench();
-    }
+    if (e.key === 'Escape' && bsSheet.classList.contains('open')) closeBottomSheet();
   });
 
 })();
