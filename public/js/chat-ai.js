@@ -1389,8 +1389,6 @@
     let pendingBadge = null;
     let inOptGroup  = false;
 
-    const PIPE_EMOJIS = ['⚙️','🎨','✨','🧩','🚀','🔎','🧠','💻','📦'];
-
     function closeList() {
       if (inList) { html += `</${listTag}>`; inList = false; }
     }
@@ -1437,12 +1435,17 @@
         i++; continue;
       }
 
-      /* ── Pipeline substep: ⚙️ 🎨 ✨ 🧩 🚀 🔎 🧠 💻 📦 ── */
-      const pipeEmoji = PIPE_EMOJIS.find(e => line.startsWith(e + ' '));
-      if (pipeEmoji) {
+      /* ── Pipeline init: ▸ text ── */
+      if (line.startsWith('▸ ')) {
         closeBoth();
-        const txt = line.slice(pipeEmoji.length).trim();
-        html += `<div class="pl-sub"><span class="pl-sub-icon">${pipeEmoji}</span><span class="pl-sub-text">${inlineMd(esc(txt))}</span></div>`;
+        html += `<div class="pl-init"><span class="pl-init-dot"></span><span>${esc(line.slice(2).trim())}</span></div>`;
+        i++; continue;
+      }
+
+      /* ── Pipeline substep: · text (clean, no emoji) ── */
+      if (line.startsWith('· ')) {
+        closeBoth();
+        html += `<div class="pl-sub"><span class="pl-sub-dot">·</span><span class="pl-sub-text">${inlineMd(esc(line.slice(2).trim()))}</span></div>`;
         i++; continue;
       }
 
@@ -1889,9 +1892,9 @@
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
           Ver vista previa
         </button>
-        <button class="ai-action-btn btn-download">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-          Descargar
+        <button class="ai-action-btn btn-download btn-download--primary">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Descargar proyecto
         </button>`;
       row.querySelector('.btn-preview').addEventListener('click', openBottomSheet);
       row.querySelector('.btn-download').addEventListener('click', () => downloadProject(wbFiles));
