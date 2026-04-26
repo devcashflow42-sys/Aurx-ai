@@ -263,44 +263,51 @@
 
   <!-- ═══ WORKBENCH PANEL ═══════════════════════════════════ -->
   <aside class="workbench" id="workbench" aria-label="Tablero de código" aria-hidden="true">
-    <!-- Top bar: tabs + mode toggles + close -->
+    <!-- Top bar: tabs + preview btn + close -->
     <div class="wb-bar">
       <div class="wb-tabs" id="wb-tabs" role="tablist" aria-label="Archivos generados"></div>
       <div class="wb-controls">
-        <div class="wb-mode-group" role="group" aria-label="Modo de vista">
-          <button class="wb-mode-btn active" id="wb-mode-code" data-mode="code" aria-pressed="true">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
-            Código
-          </button>
-          <button class="wb-mode-btn" id="wb-mode-preview" data-mode="preview" aria-pressed="false">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
-            Vista previa
-          </button>
-        </div>
+        <!-- Preview button opens BottomSheet -->
+        <button class="wb-preview-fab" id="wb-open-preview" aria-label="Ver resultado" title="Vista previa">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          <span>Vista previa</span>
+        </button>
         <button class="wb-close-btn" id="wb-close" aria-label="Cerrar tablero">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
         </button>
       </div>
     </div>
 
-    <!-- Code pane -->
+    <!-- Code pane (always shown) -->
     <div class="wb-pane wb-pane-code" id="wb-pane-code">
       <div class="wb-code-scroll">
         <pre id="wb-pre"><code id="wb-code"></code></pre>
       </div>
     </div>
+  </aside>
 
-    <!-- Preview pane -->
-    <div class="wb-pane wb-pane-preview" id="wb-pane-preview" style="display:none">
-      <div class="wb-preview-bar">
-        <span class="wb-preview-label">Vista previa en vivo</span>
-        <button class="wb-preview-reload" id="wb-reload" aria-label="Recargar vista previa">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+  <!-- ═══ PREVIEW BOTTOM SHEET ════════════════════════════ -->
+  <div class="bs-overlay" id="bs-overlay" aria-hidden="true"></div>
+  <div class="bs-sheet" id="bs-sheet" role="dialog" aria-modal="true" aria-label="Vista previa" aria-hidden="true">
+    <div class="bs-handle" aria-hidden="true"></div>
+    <div class="bs-header">
+      <button class="bs-btn bs-reload" id="bs-reload" aria-label="Recargar">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+      </button>
+      <span class="bs-title">Vista previa</span>
+      <div class="bs-header-right">
+        <button class="bs-btn bs-expand" id="bs-expand" aria-label="Pantalla completa">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
+        </button>
+        <button class="bs-btn bs-close" id="bs-close" aria-label="Cerrar">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
         </button>
       </div>
-      <iframe id="wb-iframe" title="Vista previa" sandbox="allow-scripts allow-same-origin" loading="lazy"></iframe>
     </div>
-  </aside>
+    <div class="bs-body">
+      <iframe id="bs-iframe" title="Vista previa" sandbox="allow-scripts allow-same-origin" loading="lazy"></iframe>
+    </div>
+  </div>
 
 </div>
 
