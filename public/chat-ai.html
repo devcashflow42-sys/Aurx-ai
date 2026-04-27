@@ -291,6 +291,19 @@
     </button>
   </div>
 
+  <!-- ═══ RESUMEN SHEET ═══════════════════════════════════ -->
+  <div class="rs-overlay" id="rs-overlay"></div>
+  <div class="rs-sheet"   id="rs-sheet" role="dialog" aria-modal="true" aria-label="Resumen de acciones" aria-hidden="true">
+    <div class="rs-handle" aria-hidden="true"></div>
+    <div class="rs-hdr">
+      <span class="rs-hdr-title">Resumen</span>
+      <button class="rs-close-btn" id="rs-close" aria-label="Cerrar">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="rs-body" id="rs-body"></div>
+  </div>
+
   <!-- ═══ DELETE CONFIRMATION DIALOG ═══════════════════════ -->
   <div class="confirm-overlay" id="confirm-overlay" aria-hidden="true">
     <div class="confirm-dialog" role="dialog" aria-modal="true" aria-label="Confirmar eliminación">

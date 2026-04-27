@@ -1180,7 +1180,7 @@
     if (el) { el._stopStatus && el._stopStatus(); el.remove(); }
   }
 
-  /* Creates the AI message shell and returns the bubble div */
+  /* Creates the AI message shell — returns {bubble, filePill, workingFtr} */
   function createStreamingBubble() {
     const wrap = document.createElement('div');
     wrap.className = 'msg ai';
@@ -1195,10 +1195,23 @@
     const bubble = document.createElement('div');
     bubble.className = 'msg-bubble';
 
-    body.appendChild(bubble);
+    /* File creation pill — shown when code starts generating */
+    const filePill = document.createElement('div');
+    filePill.className = 'ai-file-pill';
+    filePill.innerHTML =
+      `<span class="ai-fp-icon"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></span>` +
+      `<span class="ai-fp-text">Generando archivo</span>` +
+      `<span class="ai-fp-arr">›</span>`;
+
+    /* Working footer — shown while streaming */
+    const workingFtr = document.createElement('div');
+    workingFtr.className = 'ai-working-footer';
+    workingFtr.innerHTML = `<span class="ai-wf-spin"></span><em>Aún trabajando en ello...</em>`;
+
+    body.append(bubble, filePill, workingFtr);
     wrap.append(av, body);
     messages.appendChild(wrap);
-    return bubble;
+    return { bubble, filePill, workingFtr };
   }
 
   /* Streaming fetch — SSE from /api/ai/stream */
@@ -1225,14 +1238,21 @@
     const decoder = new TextDecoder();
     let   sseBuf  = '';
     let   textBuf = '';
-    let   bubble  = null;
+    let   streamEl   = null;   /* { bubble, filePill, workingFtr } */
+    let   bubble     = null;
     let   renderTmr;
+    let   filePillShown = false;
 
     function scheduleRender() {
       clearTimeout(renderTmr);
       renderTmr = setTimeout(function () {
         if (!bubble) return;
         bubble.innerHTML = parseMarkdown(textBuf) + '<span class="typing-cursor" aria-hidden="true">▋</span>';
+        /* Show file pill when HTML code starts streaming */
+        if (!filePillShown && /```html/i.test(textBuf) && streamEl) {
+          filePillShown = true;
+          streamEl.filePill.classList.add('visible');
+        }
         chatBody.scrollTo({ top: chatBody.scrollHeight, behavior: 'smooth' });
       }, 60);
     }
@@ -1256,9 +1276,10 @@
         if (parsed.error) throw new Error(parsed.error);
 
         if (parsed.token) {
-          if (!bubble) {
+          if (!streamEl) {
             removeTyping(typingId);
-            bubble = createStreamingBubble();
+            streamEl = createStreamingBubble();
+            bubble   = streamEl.bubble;
           }
           textBuf += parsed.token;
           scheduleRender();
@@ -1267,6 +1288,19 @@
     }
 
     clearTimeout(renderTmr);
+
+    /* ── Stream ended: clean up streaming UI ── */
+    if (streamEl) {
+      streamEl.workingFtr.remove();
+      if (filePillShown) {
+        streamEl.filePill.querySelector('.ai-fp-text').textContent = 'Archivo creado';
+        streamEl.filePill.querySelector('.ai-fp-arr').textContent  = '✓';
+        streamEl.filePill.querySelector('.ai-fp-arr').classList.add('done');
+      } else {
+        streamEl.filePill.remove();
+      }
+    }
+
     if (bubble) {
       bubble.innerHTML = parseMarkdown(textBuf);
       applyHighlighting(bubble);
@@ -1283,7 +1317,7 @@
       }
       /* Show preview + download when AI generates code ─────────────────────
          1) Try badge format first: [ HTML ] — filename.html
-         2) Fallback: extract any ``` blocks when response has HTML or ✅ build ──── */
+         2) Fallback: extract any ``` blocks when response has HTML or build done ── */
       let detectedFiles = extractFiles(textBuf);
 
       if (Object.keys(detectedFiles).length === 0) {
@@ -1384,6 +1418,73 @@
   }
 
   /* ══════════════════════════════════════════════
+     RUN DETAILS CARD BUILDER
+  ══════════════════════════════════════════════ */
+  function buildRdCard(lines, isStreaming) {
+    const CHK = `<svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>`;
+    const CHK_GRN = `<svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="3" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>`;
+
+    let status = isStreaming ? 'working' : 'success';
+    let actionText = '';
+    const steps = [];
+    let curStep = null;
+
+    for (const line of lines) {
+      const l = line.trim();
+      if (!l) continue;
+      if (l.startsWith('🧠')) {
+        if (/SUCCESS/i.test(l) && !isStreaming) status = 'success';
+      } else if (/^▶️?\s+/.test(l)) {
+        actionText = l.replace(/^▶️?\s+/, '');
+      } else if (/^[✔✅]️?\s+/.test(l)) {
+        curStep = { label: l.replace(/^[✔✅]️?\s+/, ''), subs: [] };
+        steps.push(curStep);
+      } else if (/^[-*]\s/.test(l) && curStep) {
+        curStep.subs.push(l.slice(2));
+      }
+    }
+
+    const id = 'rd-' + Math.random().toString(36).slice(2, 8);
+    const badgeCls = status === 'success' ? 'success' : 'working';
+    const badgeTxt = status === 'success' ? 'SUCCESS' : 'WORKING';
+
+    const stepsHtml = steps.map((step, idx) => {
+      const isLast = idx === steps.length - 1;
+      const circ = (isStreaming && isLast) ? 'active' : 'done';
+      const inner = circ === 'active' ? '' : CHK;
+      const subsHtml = step.subs.map(sub => `
+        <div class="rd-sub">
+          <span class="rd-sub-ic done">${CHK_GRN}</span>
+          <span>${esc(sub)}</span>
+        </div>`).join('');
+      return `<div class="rd-step">
+        <div class="rd-step-circ ${circ}">${inner}</div>
+        <div class="rd-step-info">
+          <div class="rd-step-lbl">${esc(step.label)}</div>
+          ${subsHtml ? `<div class="rd-subs">${subsHtml}</div>` : ''}
+        </div>
+      </div>`;
+    }).join('');
+
+    const actionHtml = actionText
+      ? `<div class="rd-action-lbl">▶ Called Action: <strong>${esc(actionText)}</strong></div>`
+      : '';
+
+    return `<div class="rd-card" id="${id}">
+      <div class="rd-card-hdr" data-rd-id="${id}">
+        <span class="rd-card-icon">🧠</span>
+        <span class="rd-card-title">RUN DETAILS</span>
+        <span class="rd-card-badge ${badgeCls}">${badgeTxt}</span>
+        <span class="rd-card-toggle">›</span>
+      </div>
+      <div class="rd-card-body">
+        ${actionHtml}
+        <div class="rd-steps">${stepsHtml || '<div style="padding:6px 0 2px;color:var(--text-3);font-size:12px">Procesando...</div>'}</div>
+      </div>
+    </div>`;
+  }
+
+  /* ══════════════════════════════════════════════
      MARKDOWN RENDERER
   ══════════════════════════════════════════════ */
   function esc(s) {
@@ -1415,6 +1516,8 @@
     let codeLines = [];
     let pendingBadge = null;
     let inOptGroup  = false;
+    let inRdCard    = false;
+    let rdCardBuf   = [];
 
     function closeList() {
       if (inList) { html += `</${listTag}>`; inList = false; }
@@ -1426,6 +1529,27 @@
 
     while (i < lines.length) {
       const line = lines[i];
+
+      /* ── RUN DETAILS card start ── */
+      if (!inCodeBlock && line.trim().startsWith('🧠')) {
+        closeBoth();
+        inRdCard = true;
+        rdCardBuf = [line];
+        i++; continue;
+      }
+
+      /* ── Collecting RUN DETAILS lines ── */
+      if (inRdCard) {
+        if (line.trim().startsWith('📦')) {
+          html += buildRdCard(rdCardBuf, false);
+          inRdCard = false; rdCardBuf = [];
+          const label = line.trim().replace(/^📦\s*/, '').replace(/:$/, '').trim() || 'RESULTADO FINAL';
+          html += `<div class="rd-final-sep"><span>${esc(label)}</span></div>`;
+          i++; continue;
+        }
+        rdCardBuf.push(line);
+        i++; continue;
+      }
 
       /* ── Fenced code block ── */
       const fenceMatch = line.trim().match(/^```(\w*)$/);
@@ -1604,6 +1728,10 @@
     }
 
     closeBoth();
+    /* Flush partial RUN DETAILS card (streaming) */
+    if (inRdCard && rdCardBuf.length) {
+      html += buildRdCard(rdCardBuf, true);
+    }
     if (inCodeBlock && codeLines.length) {
       const langClass = codeLang ? `language-${codeLang}` : '';
       html += `<div class="md-code-block"><div class="md-code-body"><pre><code class="${langClass}">${esc(codeLines.join('\n'))}</code></pre></div></div>`;
@@ -1889,6 +2017,66 @@
     document.body.style.overflow = '';
     setTimeout(() => { if (!bsSheet.classList.contains('open')) bsIframe.srcdoc = ''; }, 350);
   }
+
+  /* ══════════════════════════════════════════════
+     RESUMEN SHEET — timeline from RUN DETAILS card
+  ══════════════════════════════════════════════ */
+  const rsOverlay = document.getElementById('rs-overlay');
+  const rsSheet   = document.getElementById('rs-sheet');
+  const rsBody    = document.getElementById('rs-body');
+  const rsClose   = document.getElementById('rs-close');
+
+  function openResumeSheet(cardEl) {
+    if (!rsSheet || !rsBody || !cardEl) return;
+    const items = [];
+    const actionEl = cardEl.querySelector('.rd-action-lbl strong');
+    if (actionEl) items.push({ type: 'action', text: actionEl.textContent.trim() });
+
+    cardEl.querySelectorAll('.rd-step').forEach(function (stepEl) {
+      const lbl = stepEl.querySelector('.rd-step-lbl');
+      if (lbl) items.push({ type: 'step', text: lbl.textContent.trim() });
+      stepEl.querySelectorAll('.rd-sub span:last-child').forEach(function (subEl) {
+        const t = subEl.textContent.trim();
+        if (t) items.push({ type: 'sub', text: t });
+      });
+    });
+
+    rsBody.innerHTML = `<div class="rs-timeline">${items.map(function (item) {
+      const dotCls = item.type === 'step' ? 'step' : item.type === 'action' ? 'done' : 'sub';
+      return `<div class="rs-tl-row">
+        <div class="rs-tl-dot ${dotCls}"></div>
+        <div class="rs-tl-line"></div>
+        <div class="rs-tl-text${item.type === 'step' ? ' bold' : ''}">${item.text}</div>
+      </div>`;
+    }).join('')}</div>`;
+
+    rsOverlay.classList.add('open');
+    rsSheet.classList.add('open');
+    rsSheet.setAttribute('aria-hidden', 'false');
+  }
+
+  function closeResumeSheet() {
+    if (!rsSheet) return;
+    rsOverlay.classList.remove('open');
+    rsSheet.classList.remove('open');
+    rsSheet.setAttribute('aria-hidden', 'true');
+  }
+
+  if (rsClose)   rsClose.addEventListener('click', closeResumeSheet);
+  if (rsOverlay) rsOverlay.addEventListener('click', closeResumeSheet);
+
+  /* ── RD card click delegation ── */
+  messages.addEventListener('click', function (e) {
+    const hdr = e.target.closest('.rd-card-hdr');
+    if (!hdr) return;
+    const card = hdr.closest('.rd-card');
+    if (!card) return;
+    if (e.target.closest('.rd-card-toggle')) {
+      card.classList.toggle('rd-collapsed');
+    } else {
+      openResumeSheet(card);
+    }
+  });
 
   /* ── Floating card show / hide ── */
   function showPreviewFloat() {
