@@ -1281,8 +1281,35 @@
         beginBtn.innerHTML  = 'Comenzar build <span aria-hidden="true">→</span>';
         bubble.appendChild(beginBtn);
       }
-      /* Show preview card + action button if AI generated named code files */
-      const detectedFiles = extractFiles(textBuf);
+      /* Show preview + download when AI generates code ─────────────────────
+         1) Try badge format first: [ HTML ] — filename.html
+         2) Fallback: extract any ``` blocks when response has HTML or ✅ build ──── */
+      let detectedFiles = extractFiles(textBuf);
+
+      if (Object.keys(detectedFiles).length === 0) {
+        const hasBuildDone = /✅\s*Build\s+completed/i.test(textBuf);
+        const hasHtmlBlock = /```html\n[\s\S]{100,}/i.test(textBuf);
+
+        if (hasBuildDone || hasHtmlBlock) {
+          const re = /```(\w+)\n([\s\S]+?)```/g;
+          let m, cssIdx = 0, jsIdx = 0;
+          while ((m = re.exec(textBuf)) !== null) {
+            const lang = m[1].toLowerCase();
+            const code = m[2].trim();
+            if (code.length < 80) continue;
+            if (lang === 'html') {
+              detectedFiles['index.html'] = { lang: 'HTML', code };
+            } else if (lang === 'css') {
+              detectedFiles[cssIdx === 0 ? 'styles.css' : `styles${cssIdx}.css`] = { lang: 'CSS', code };
+              cssIdx++;
+            } else if (lang === 'js' || lang === 'javascript') {
+              detectedFiles[jsIdx === 0 ? 'script.js' : `script${jsIdx}.js`] = { lang: 'JS', code };
+              jsIdx++;
+            }
+          }
+        }
+      }
+
       if (Object.keys(detectedFiles).length > 0) {
         onFilesDetected(detectedFiles, bubble);
       }
