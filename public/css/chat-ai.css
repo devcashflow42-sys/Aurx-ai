@@ -1983,3 +1983,33 @@ body.sb-locked { overflow:hidden; }
 .rs-tl-dot.done { background:#10b981; }
 .rs-tl-text { font-size:13px; color:var(--text-2); line-height:1.55; flex:1; }
 .rs-tl-text.bold { font-weight:700; color:var(--text); font-size:13.5px; }
+
+/* ═══════════════════════════════════════════════════════════
+   FILE CARD — compact file chip instead of full code block
+═══════════════════════════════════════════════════════════ */
+.msg-bubble .md-file-card {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 14px;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 12px; margin: 8px 0;
+  animation: rd-in .2s ease;
+}
+.msg-bubble .md-file-card--gen { border-style: dashed; }
+.msg-bubble .md-fc-icon {
+  width: 32px; height: 32px; border-radius: 8px;
+  background: var(--surface-h);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.msg-bubble .md-fc-info { flex: 1; min-width: 0; }
+.msg-bubble .md-fc-name {
+  display: block; font-size: 13px; font-weight: 600;
+  color: var(--text); font-family: 'JetBrains Mono', monospace;
+}
+.msg-bubble .md-fc-meta {
+  display: block; font-size: 11.5px; color: var(--text-3); margin-top: 1px;
+}
+.msg-bubble .md-fc-writing {
+  color: #3b82f6;
+  font-style: italic;
+}

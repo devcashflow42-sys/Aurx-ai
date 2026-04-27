@@ -192,8 +192,9 @@
     }
     /* Hide floating preview card and clear stored files */
     wbFiles = {};
-    const pf = document.getElementById('preview-float');
-    if (pf) { pf.classList.remove('show'); pf.setAttribute('aria-hidden','true'); }
+    /* NOTE: do NOT hide the preview float here — user may have a preview
+       open in the same session and expects it to persist. Float is reset
+       only when the page reloads or when a new project is detected. */
   }
 
   /* ── Date group label ── */
@@ -1504,6 +1505,28 @@
       .replace(/`([^`]+)`/g,         '<code class="md-code">$1</code>');
   }
 
+  /* ── File card helpers (used in parseMarkdown) ── */
+  function _fcDefaultName(lang) {
+    if (lang === 'html')                    return 'index.html';
+    if (lang === 'css')                     return 'styles.css';
+    if (lang === 'js' || lang === 'javascript') return 'script.js';
+    return 'archivo.' + lang;
+  }
+  function _fcIcon(lang) {
+    const c = { html:'#3b82f6', css:'#8b5cf6', js:'#f59e0b', javascript:'#f59e0b' }[lang] || '#6b6b67';
+    return `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>`;
+  }
+  function _fcHtml(lang, fname, lines, generating) {
+    const lbl = (lang === 'javascript' ? 'JS' : lang.toUpperCase());
+    const meta = generating
+      ? `<span class="md-fc-meta md-fc-writing">${lbl} · escribiendo ${lines} líneas...</span>`
+      : `<span class="md-fc-meta">${lbl} · ${lines} líneas</span>`;
+    return `<div class="md-file-card${generating ? ' md-file-card--gen' : ''}">` +
+      `<span class="md-fc-icon">${_fcIcon(lang)}</span>` +
+      `<div class="md-fc-info"><span class="md-fc-name">${esc(fname)}</span>${meta}</div>` +
+      `</div>`;
+  }
+
   function parseMarkdown(raw) {
     if (!raw) return '';
     const lines = raw.split('\n');
@@ -1565,20 +1588,29 @@
           /* build header: badge or plain language label + copy button */
           const COPY_ICON  = `<svg class="copy-icon"  width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>`;
           const CHECK_ICON = `<svg class="check-icon" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>`;
-          const copyBtn    = `<button class="md-copy-btn" aria-label="Copiar código" data-testid="copy-code-btn">${COPY_ICON}${CHECK_ICON}<span class="md-copy-label">Copiar</span></button>`;
-          let header = '';
-          const langClass = codeLang ? `language-${codeLang}` : '';
-          if (pendingBadge) {
-            const badge = `<span class="md-file-badge">${esc(pendingBadge.lang)}</span>`;
-            const fname = pendingBadge.filename
-              ? `<span class="md-file-name">${esc(pendingBadge.filename)}</span>` : '';
-            header = `<div class="md-code-header"><span class="md-code-lang-wrap">${badge}${fname}</span>${copyBtn}</div>`;
+          const isWebLang = ['html','css','js','javascript'].includes(codeLang.toLowerCase());
+          if (isWebLang && codeLines.length > 12) {
+            /* Show compact file card instead of full code dump */
+            const fname = (pendingBadge?.filename) || _fcDefaultName(codeLang);
+            html += _fcHtml(codeLang, fname, codeLines.length, false);
             pendingBadge = null;
           } else {
-            const lbl = codeLang ? `<span class="md-code-lang-lbl">${esc(codeLang)}</span>` : '';
-            header = `<div class="md-code-header"><span class="md-code-lang-wrap">${lbl}</span>${copyBtn}</div>`;
+            const COPY_ICON  = `<svg class="copy-icon"  width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>`;
+            const CHECK_ICON = `<svg class="check-icon" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>`;
+            const copyBtn    = `<button class="md-copy-btn" aria-label="Copiar código" data-testid="copy-code-btn">${COPY_ICON}${CHECK_ICON}<span class="md-copy-label">Copiar</span></button>`;
+            let header = '';
+            const langClass = codeLang ? `language-${codeLang}` : '';
+            if (pendingBadge) {
+              const badge = `<span class="md-file-badge">${esc(pendingBadge.lang)}</span>`;
+              const fn = pendingBadge.filename ? `<span class="md-file-name">${esc(pendingBadge.filename)}</span>` : '';
+              header = `<div class="md-code-header"><span class="md-code-lang-wrap">${badge}${fn}</span>${copyBtn}</div>`;
+              pendingBadge = null;
+            } else {
+              const lbl = codeLang ? `<span class="md-code-lang-lbl">${esc(codeLang)}</span>` : '';
+              header = `<div class="md-code-header"><span class="md-code-lang-wrap">${lbl}</span>${copyBtn}</div>`;
+            }
+            html += `<div class="md-code-block">${header}<div class="md-code-body"><pre><code class="${langClass}">${esc(codeLines.join('\n'))}</code></pre></div></div>`;
           }
-          html += `<div class="md-code-block">${header}<div class="md-code-body"><pre><code class="${langClass}">${esc(codeLines.join('\n'))}</code></pre></div></div>`;
           inCodeBlock = false; codeLines = []; codeLang = '';
         } else {
           codeLines.push(line);
@@ -1733,8 +1765,15 @@
       html += buildRdCard(rdCardBuf, true);
     }
     if (inCodeBlock && codeLines.length) {
-      const langClass = codeLang ? `language-${codeLang}` : '';
-      html += `<div class="md-code-block"><div class="md-code-body"><pre><code class="${langClass}">${esc(codeLines.join('\n'))}</code></pre></div></div>`;
+      const isWebLang = ['html','css','js','javascript'].includes(codeLang.toLowerCase());
+      if (isWebLang && codeLines.length > 5) {
+        /* Streaming: show live "generating" file card */
+        const fname = (pendingBadge?.filename) || _fcDefaultName(codeLang);
+        html += _fcHtml(codeLang, fname, codeLines.length, true);
+      } else {
+        const langClass = codeLang ? `language-${codeLang}` : '';
+        html += `<div class="md-code-block"><div class="md-code-body"><pre><code class="${langClass}">${esc(codeLines.join('\n'))}</code></pre></div></div>`;
+      }
     }
     return html;
   }
