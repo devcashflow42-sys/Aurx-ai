@@ -1250,12 +1250,12 @@
         if (!bubble) return;
         bubble.innerHTML = parseMarkdown(textBuf) + '<span class="typing-cursor" aria-hidden="true">▋</span>';
         /* Show file pill when HTML code starts streaming */
-        if (!filePillShown && /```html/i.test(textBuf) && streamEl) {
+        if (!filePillShown && /```\s*html/i.test(textBuf) && streamEl) {
           filePillShown = true;
           streamEl.filePill.classList.add('visible');
         }
         chatBody.scrollTo({ top: chatBody.scrollHeight, behavior: 'smooth' });
-      }, 60);
+      }, 30);
     }
 
     while (true) {
@@ -1318,15 +1318,19 @@
       }
       /* Show preview + download when AI generates code ─────────────────────
          1) Try badge format first: [ HTML ] — filename.html
-         2) Fallback: extract any ``` blocks when response has HTML or build done ── */
+         2) Fallback: trigger on ✅ Build, 📦 RESULTADO, or any html block.
+            Extraction handles closed AND unclosed code fences. ───────────── */
       let detectedFiles = extractFiles(textBuf);
 
       if (Object.keys(detectedFiles).length === 0) {
-        const hasBuildDone = /✅\s*Build\s+completed/i.test(textBuf);
-        const hasHtmlBlock = /```html\n[\s\S]{100,}/i.test(textBuf);
+        const hasTrigger =
+          /(?:✅\s*)?Build\s+completed/i.test(textBuf) ||
+          /📦\s*RESULTADO/i.test(textBuf) ||
+          /```\s*html/i.test(textBuf);
 
-        if (hasBuildDone || hasHtmlBlock) {
-          const re = /```(\w+)\n([\s\S]+?)```/g;
+        if (hasTrigger) {
+          /* Handle \r\n, spaces after fence, and unclosed blocks */
+          const re = /```[ \t]*(\w+)[ \t]*\r?\n([\s\S]+?)(?:```|$)/g;
           let m, cssIdx = 0, jsIdx = 0;
           while ((m = re.exec(textBuf)) !== null) {
             const lang = m[1].toLowerCase();
@@ -1566,7 +1570,7 @@
         if (line.trim().startsWith('📦')) {
           html += buildRdCard(rdCardBuf, false);
           inRdCard = false; rdCardBuf = [];
-          const label = line.trim().replace(/^📦\s*/, '').replace(/:$/, '').trim() || 'RESULTADO FINAL';
+          const label = line.trim().replace(/^📦\s*/, '').replace(/\*\*/g, '').replace(/:?\s*$/, '').trim() || 'RESULTADO FINAL';
           html += `<div class="rd-final-sep"><span>${esc(label)}</span></div>`;
           i++; continue;
         }
@@ -1575,7 +1579,7 @@
       }
 
       /* ── Fenced code block ── */
-      const fenceMatch = line.trim().match(/^```(\w*)$/);
+      const fenceMatch = line.trim().match(/^```[ \t]*(\w*)[ \t]*$/);
       if (fenceMatch && !inCodeBlock) {
         closeList();
         inCodeBlock = true;
@@ -2129,15 +2133,19 @@
 
   /**
    * Called from streamAI when AI generates named code files.
-   * Stores files, injects action row into the AI message, and shows floating card.
+   * Stores files, injects action row AFTER the .msg.ai wrap, and shows floating card.
    */
   function onFilesDetected(files, bubbleEl) {
     wbFiles = files;
 
-    /* Action row below the AI bubble */
-    if (bubbleEl && bubbleEl.parentElement) {
-      const existing = bubbleEl.parentElement.querySelector('.ai-action-row');
-      if (existing) existing.remove();
+    /* Find the .msg.ai ancestor and insert the action row after it */
+    const msgWrap = bubbleEl ? bubbleEl.closest('.msg.ai') : null;
+    const container = msgWrap ? msgWrap.parentElement : null;
+
+    if (container) {
+      /* Remove any existing action row for this message */
+      const existing = msgWrap.nextElementSibling;
+      if (existing && existing.classList.contains('ai-action-row')) existing.remove();
 
       const row = document.createElement('div');
       row.className = 'ai-action-row';
@@ -2152,7 +2160,8 @@
         </button>`;
       row.querySelector('.btn-preview').addEventListener('click', openBottomSheet);
       row.querySelector('.btn-download').addEventListener('click', () => downloadProject(wbFiles));
-      bubbleEl.parentElement.appendChild(row);
+      /* Insert after the .msg.ai wrap so it's a sibling, not a child */
+      msgWrap.after(row);
     }
 
     showPreviewFloat();
