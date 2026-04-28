@@ -50,6 +50,10 @@ TIPOS DISPONIBLES Y SU USO:
 [COPIABLE:comando]
 // Para comandos de terminal (npm, git, pip, etc.)
 
+[COPIABLE:texto]
+// Para texto largo copiable: letras de canciones, poemas, discursos, emails, plantillas, etc.
+// SIEMPRE usa este bloque cuando el usuario pide una canción, letra, poema o texto largo.
+
 [COPIABLE:prompt]
 // Para prompts de IA o instrucciones
 

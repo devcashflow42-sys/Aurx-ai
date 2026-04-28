@@ -1246,23 +1246,33 @@
     const decoder = new TextDecoder();
     let   sseBuf  = '';
     let   textBuf = '';
-    let   streamEl   = null;   /* { bubble, filePill, workingFtr } */
-    let   bubble     = null;
+    let   streamEl      = null;   /* { bubble, filePill, workingFtr } */
+    let   bubble        = null;
     let   renderTmr;
     let   filePillShown = false;
+    let   userScrolledUp = false;
+
+    /* Detect manual upward scroll during streaming */
+    function onStreamScroll() {
+      const fromBottom = chatBody.scrollHeight - chatBody.scrollTop - chatBody.clientHeight;
+      userScrolledUp = fromBottom > 100;
+    }
+    chatBody.addEventListener('scroll', onStreamScroll, { passive: true });
 
     function scheduleRender() {
       clearTimeout(renderTmr);
       renderTmr = setTimeout(function () {
         if (!bubble) return;
         bubble.innerHTML = parseMarkdown(textBuf) + '<span class="typing-cursor" aria-hidden="true">▋</span>';
-        /* Show file pill + preview float (generating state) when HTML starts streaming */
+        /* Show file pill when HTML starts streaming (no float during generation — it blocks content) */
         if (!filePillShown && (/```\s*html/i.test(textBuf) || /\[COPIABLE:html\]/i.test(textBuf)) && streamEl) {
           filePillShown = true;
           streamEl.filePill.classList.add('visible');
-          showPreviewFloatGenerating();
         }
-        chatBody.scrollTo({ top: chatBody.scrollHeight, behavior: 'smooth' });
+        /* Only auto-scroll if user hasn't scrolled up manually */
+        if (!userScrolledUp) {
+          chatBody.scrollTo({ top: chatBody.scrollHeight, behavior: 'smooth' });
+        }
       }, 30);
     }
 
@@ -1297,6 +1307,8 @@
     }
 
     clearTimeout(renderTmr);
+    chatBody.removeEventListener('scroll', onStreamScroll);
+    userScrolledUp = false;
 
     /* ── Stream ended: clean up streaming UI ── */
     if (streamEl) {
@@ -1750,6 +1762,13 @@
       if (/^---+$/.test(line.trim()) || /^\*\*\*+$/.test(line.trim())) {
         closeBoth();
         html += '<hr class="md-hr">';
+        i++; continue;
+      }
+
+      /* ── H4 ── */
+      if (line.startsWith('#### ')) {
+        closeBoth();
+        html += `<h4 class="md-h4">${inlineMd(esc(line.slice(5)))}</h4>`;
         i++; continue;
       }
 
