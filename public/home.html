@@ -13,6 +13,30 @@
 </head>
 <body>
 
+<!-- Model Selector Panel -->
+<div class="ms-overlay" id="ms-overlay"></div>
+<div class="ms-panel" id="ms-panel" role="dialog" aria-modal="true" aria-label="Seleccionar modelo">
+  <div class="ms-handle" aria-hidden="true"></div>
+  <div class="ms-header">
+    <span class="ms-title">Seleccionar modelo</span>
+    <button class="ms-close" id="ms-close" aria-label="Cerrar">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+    </button>
+  </div>
+  <div class="ms-search-wrap">
+    <div class="ms-search-box">
+      <span class="ms-search-icon">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+      </span>
+      <input type="text" class="ms-search-input" id="ms-search" placeholder="Buscar modelo..." autocomplete="off" spellcheck="false" />
+      <button class="ms-search-clear" id="ms-search-clear" aria-label="Limpiar búsqueda">
+        <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+  </div>
+  <div class="ms-body" id="ms-body"></div>
+</div>
+
 <!-- ═══ DRAWER OVERLAY ════════════════════════════ -->
 <div class="drawer-overlay" id="drawer-overlay" aria-hidden="true"></div>
 
@@ -151,34 +175,32 @@
 
   <!-- BOTTOM INPUT AREA -->
   <div class="home-input-area">
-    <!-- Main input box -->
     <div class="home-input-box" id="home-input-box">
-      <textarea
-        id="home-input"
-        placeholder="Crea una app SaaS para..."
-        rows="1"
-        autocomplete="off"
-        spellcheck="true"
-        aria-label="Escribe lo que quieres crear"
-      ></textarea>
-      <div class="home-input-footer">
-        <div class="home-input-tools">
-          <button class="tool-btn" title="Adjuntar">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
-          </button>
-          <button class="tool-btn" title="Idioma">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
-          </button>
-          <button class="tool-btn" title="Configuración">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="11" y1="18" x2="13" y2="18"/></svg>
-          </button>
-          <button class="tool-btn" title="Micrófono">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
-          </button>
-        </div>
+      <!-- Input row: attach + textarea + send -->
+      <div class="home-input-row">
+        <button class="h-attach-btn" title="Adjuntar" aria-label="Adjuntar archivo">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+        </button>
+        <textarea
+          id="home-input"
+          placeholder="Pregunta lo que quieras..."
+          rows="1"
+          autocomplete="off"
+          spellcheck="true"
+          aria-label="Escribe lo que quieres crear"
+        ></textarea>
         <button class="home-send-btn" id="home-send-btn" disabled aria-label="Enviar">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
         </button>
+      </div>
+      <!-- Footer: model pill + hint -->
+      <div class="home-input-footer">
+        <button class="model-pill" id="model-pill" aria-haspopup="dialog" aria-expanded="false">
+          <span class="model-dot dot-green" id="model-dot"></span>
+          <span id="model-label">OpenAI GPT-4o Mini</span>
+          <svg class="model-caret" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <span class="input-hint">Enter para enviar</span>
       </div>
     </div>
   </div>

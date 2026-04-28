@@ -906,8 +906,14 @@
 
     /* Load conversation from ?id=xxx, or pre-fill from ?msg=xxx */
     const urlParams = new URLSearchParams(window.location.search);
-    const urlId  = urlParams.get('id');
-    const urlMsg = urlParams.get('msg');
+    const urlId    = urlParams.get('id');
+    const urlMsg   = urlParams.get('msg');
+    const urlModel = urlParams.get('model');
+    /* Pre-select model passed from home page */
+    if (urlModel) {
+      const m = MODELS.find(x => x.id === urlModel);
+      if (m) selectModel(m);
+    }
     if (urlId) {
       loadConv(urlId);
     } else if (urlMsg) {
