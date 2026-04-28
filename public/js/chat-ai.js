@@ -1031,17 +1031,18 @@
     }
   }
 
-  /* ── Copy-code button delegation ── */
+  /* ── Copy button delegation (code blocks + copiable blocks) ── */
   messages.addEventListener('click', function (e) {
-    const btn = e.target.closest('.md-copy-btn');
+    const btn = e.target.closest('.md-copy-btn, .copiable-copy');
     if (!btn) return;
-    const codeEl = btn.closest('.md-code-block')?.querySelector('pre code');
+    const codeEl = btn.closest('.md-code-block')?.querySelector('pre code')
+                || btn.closest('.copiable-block')?.querySelector('pre code');
     if (!codeEl) return;
     const text = codeEl.innerText || codeEl.textContent || '';
 
     function markCopied() {
       btn.classList.add('copied');
-      const lbl = btn.querySelector('.md-copy-label');
+      const lbl = btn.querySelector('.md-copy-label, .cp-label');
       if (lbl) lbl.textContent = 'Copiado';
       setTimeout(function () {
         btn.classList.remove('copied');
@@ -1256,7 +1257,7 @@
         if (!bubble) return;
         bubble.innerHTML = parseMarkdown(textBuf) + '<span class="typing-cursor" aria-hidden="true">▋</span>';
         /* Show file pill + preview float (generating state) when HTML starts streaming */
-        if (!filePillShown && /```\s*html/i.test(textBuf) && streamEl) {
+        if (!filePillShown && (/```\s*html/i.test(textBuf) || /\[COPIABLE:html\]/i.test(textBuf)) && streamEl) {
           filePillShown = true;
           streamEl.filePill.classList.add('visible');
           showPreviewFloatGenerating();
@@ -1333,24 +1334,38 @@
         const hasTrigger =
           /(?:✅\s*)?Build\s+completed/i.test(textBuf) ||
           /📦\s*RESULTADO/i.test(textBuf) ||
-          /```\s*html/i.test(textBuf);
+          /```\s*html/i.test(textBuf) ||
+          /\[COPIABLE:html\]/i.test(textBuf);
 
         if (hasTrigger) {
-          /* Handle \r\n, spaces after fence, and unclosed blocks */
-          const re = /```[ \t]*(\w+)[ \t]*\r?\n([\s\S]+?)(?:```|$)/g;
-          let m, cssIdx = 0, jsIdx = 0;
-          while ((m = re.exec(textBuf)) !== null) {
-            const lang = m[1].toLowerCase();
-            const code = m[2].trim();
+          /* Handle [COPIABLE:html] blocks */
+          const cpRe = /\[COPIABLE:(\w+)\]\n([\s\S]+?)(?=\n\[COPIABLE:|$)/gi;
+          let cm, cpCssIdx = 0, cpJsIdx = 0;
+          while ((cm = cpRe.exec(textBuf)) !== null) {
+            const lang = cm[1].toLowerCase();
+            const code = cm[2].trim();
             if (code.length < 80) continue;
-            if (lang === 'html') {
-              detectedFiles['index.html'] = { lang: 'HTML', code };
-            } else if (lang === 'css') {
-              detectedFiles[cssIdx === 0 ? 'styles.css' : `styles${cssIdx}.css`] = { lang: 'CSS', code };
-              cssIdx++;
-            } else if (lang === 'js' || lang === 'javascript') {
-              detectedFiles[jsIdx === 0 ? 'script.js' : `script${jsIdx}.js`] = { lang: 'JS', code };
-              jsIdx++;
+            if (lang === 'html') detectedFiles['index.html'] = { lang: 'HTML', code };
+            else if (lang === 'css') { detectedFiles[cpCssIdx === 0 ? 'styles.css' : `styles${cpCssIdx}.css`] = { lang: 'CSS', code }; cpCssIdx++; }
+            else if (lang === 'js' || lang === 'javascript') { detectedFiles[cpJsIdx === 0 ? 'script.js' : `script${cpJsIdx}.js`] = { lang: 'JS', code }; cpJsIdx++; }
+          }
+          /* Fallback: Handle \`\`\`html fences */
+          if (Object.keys(detectedFiles).length === 0) {
+            const re = /```[ \t]*(\w+)[ \t]*\r?\n([\s\S]+?)(?:```|$)/g;
+            let m, cssIdx = 0, jsIdx = 0;
+            while ((m = re.exec(textBuf)) !== null) {
+              const lang = m[1].toLowerCase();
+              const code = m[2].trim();
+              if (code.length < 80) continue;
+              if (lang === 'html') {
+                detectedFiles['index.html'] = { lang: 'HTML', code };
+              } else if (lang === 'css') {
+                detectedFiles[cssIdx === 0 ? 'styles.css' : `styles${cssIdx}.css`] = { lang: 'CSS', code };
+                cssIdx++;
+              } else if (lang === 'js' || lang === 'javascript') {
+                detectedFiles[jsIdx === 0 ? 'script.js' : `script${jsIdx}.js`] = { lang: 'JS', code };
+                jsIdx++;
+              }
             }
           }
         }
@@ -1516,6 +1531,19 @@
       .replace(/`([^`]+)`/g,         '<code class="md-code">$1</code>');
   }
 
+  /* ── Copiable block builder ── */
+  const COPIABLE_LABELS = {
+    codigo: 'Código', comando: 'Comando', prompt: 'Prompt',
+    json: 'JSON', texto: 'Texto', env: 'Variables .env',
+    html: 'HTML', css: 'CSS',
+  };
+  function buildCopiableBlock(type, content) {
+    const label = COPIABLE_LABELS[type] || type.toUpperCase();
+    const COPY_ICON  = `<svg class="copy-icon" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>`;
+    const CHECK_ICON = `<svg class="check-icon" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>`;
+    return `<div class="copiable-block" data-type="${esc(type)}"><div class="copiable-hdr"><span class="copiable-type">${esc(label)}</span><button class="copiable-copy" aria-label="Copiar">${COPY_ICON}${CHECK_ICON}<span class="cp-label">Copiar</span></button></div><div class="copiable-body"><pre><code>${esc(content)}</code></pre></div></div>`;
+  }
+
   /* ── File card helpers (used in parseMarkdown) ── */
   function _fcDefaultName(lang) {
     if (lang === 'html')                    return 'index.html';
@@ -1583,6 +1611,24 @@
         }
         rdCardBuf.push(line);
         i++; continue;
+      }
+
+      /* ── [COPIABLE:tipo] block ── */
+      const copiableTag = line.trim().match(/^\[COPIABLE:(\w+)\]$/i);
+      if (copiableTag) {
+        closeBoth();
+        const cpType = copiableTag[1].toLowerCase();
+        i++;
+        const cpLines = [];
+        while (i < lines.length) {
+          if (/^\[COPIABLE:\w+\]$/i.test(lines[i].trim())) break;
+          cpLines.push(lines[i]);
+          i++;
+        }
+        while (cpLines.length && !cpLines[0].trim())                   cpLines.shift();
+        while (cpLines.length && !cpLines[cpLines.length - 1].trim())  cpLines.pop();
+        html += buildCopiableBlock(cpType, cpLines.join('\n'));
+        continue;
       }
 
       /* ── Fenced code block ── */

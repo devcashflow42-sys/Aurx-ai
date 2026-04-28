@@ -1259,6 +1259,90 @@ body.sb-locked { overflow:hidden; }
   padding: 0 !important;
 }
 
+/* ═══════════════════════════════════════════════
+   COPIABLE BLOCKS  [COPIABLE:tipo]
+═══════════════════════════════════════════════ */
+.msg-bubble .copiable-block {
+  border-radius: 12px;
+  border: 1.5px solid #e8e8e5;
+  overflow: hidden;
+  margin: 10px 0;
+  background: #fafaf9;
+}
+.msg-bubble .copiable-hdr {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 8px 10px 8px 14px;
+  background: #f2f2f0;
+  border-bottom: 1px solid #e8e8e5;
+  gap: 8px;
+}
+.msg-bubble .copiable-type {
+  font-size: 10.5px; font-weight: 700;
+  letter-spacing: .07em; text-transform: uppercase;
+  color: #6b6b67;
+}
+/* Type accent colours */
+.msg-bubble .copiable-block[data-type="codigo"] .copiable-type { color: #7c3aed; }
+.msg-bubble .copiable-block[data-type="html"]   .copiable-type { color: #c2410c; }
+.msg-bubble .copiable-block[data-type="css"]    .copiable-type { color: #0284c7; }
+.msg-bubble .copiable-block[data-type="json"]   .copiable-type { color: #059669; }
+.msg-bubble .copiable-block[data-type="comando"].copiable-type { color: #1d4ed8; }
+.msg-bubble .copiable-block[data-type="prompt"] .copiable-type { color: #ea580c; }
+.msg-bubble .copiable-block[data-type="env"]    .copiable-type { color: #dc2626; }
+/* Copy button */
+.msg-bubble .copiable-copy {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 3px 9px; border-radius: 6px;
+  border: 1px solid #ddddd9; background: #fff;
+  color: #6b6b67; font-size: 11px; font-family: inherit;
+  cursor: pointer; flex-shrink: 0;
+  transition: background .14s, border-color .14s, color .14s;
+}
+.msg-bubble .copiable-copy:hover { background: #f0f0ee; border-color: #c8c8c5; color: #111110; }
+.msg-bubble .copiable-copy:active { transform: scale(.95); }
+.msg-bubble .copiable-copy.copied { color: #059669; border-color: rgba(5,150,105,.3); }
+.msg-bubble .copiable-copy .check-icon { display: none; }
+.msg-bubble .copiable-copy.copied .copy-icon  { display: none; }
+.msg-bubble .copiable-copy.copied .check-icon { display: inline; }
+/* Content body */
+.msg-bubble .copiable-body {
+  overflow-x: auto; padding: 13px 16px;
+}
+.msg-bubble .copiable-body pre { margin: 0; }
+.msg-bubble .copiable-body code {
+  font-family: 'JetBrains Mono', 'Fira Code', 'Menlo', monospace;
+  font-size: .80rem; line-height: 1.7; white-space: pre;
+  color: #111110;
+}
+/* Special: dark for html/css/codigo to match existing code blocks */
+.msg-bubble .copiable-block[data-type="codigo"],
+.msg-bubble .copiable-block[data-type="html"],
+.msg-bubble .copiable-block[data-type="css"] {
+  background: #151515; border-color: rgba(255,255,255,.07);
+}
+.msg-bubble .copiable-block[data-type="codigo"] .copiable-hdr,
+.msg-bubble .copiable-block[data-type="html"]   .copiable-hdr,
+.msg-bubble .copiable-block[data-type="css"]    .copiable-hdr {
+  background: #1a1a1a; border-bottom-color: rgba(255,255,255,.07);
+}
+.msg-bubble .copiable-block[data-type="codigo"] .copiable-copy,
+.msg-bubble .copiable-block[data-type="html"]   .copiable-copy,
+.msg-bubble .copiable-block[data-type="css"]    .copiable-copy {
+  background: transparent; border-color: rgba(255,255,255,.15);
+  color: rgba(255,255,255,.5);
+}
+.msg-bubble .copiable-block[data-type="codigo"] .copiable-copy:hover,
+.msg-bubble .copiable-block[data-type="html"]   .copiable-copy:hover,
+.msg-bubble .copiable-block[data-type="css"]    .copiable-copy:hover {
+  background: rgba(255,255,255,.07); color: rgba(255,255,255,.85);
+}
+.msg-bubble .copiable-block[data-type="codigo"] .copiable-body code,
+.msg-bubble .copiable-block[data-type="html"]   .copiable-body code,
+.msg-bubble .copiable-block[data-type="css"]    .copiable-body code {
+  color: #abb2bf;
+}
+/* File card detection: HTML in copiable:html triggers preview float */
+
 /* ── Markdown rendered content ─────────────────────────────── */
 .msg-bubble .md-h1 {
   font-family: 'DM Serif Display', serif;
