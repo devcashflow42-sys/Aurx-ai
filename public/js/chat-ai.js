@@ -1249,10 +1249,11 @@
       renderTmr = setTimeout(function () {
         if (!bubble) return;
         bubble.innerHTML = parseMarkdown(textBuf) + '<span class="typing-cursor" aria-hidden="true">▋</span>';
-        /* Show file pill when HTML code starts streaming */
+        /* Show file pill + preview float (generating state) when HTML starts streaming */
         if (!filePillShown && /```\s*html/i.test(textBuf) && streamEl) {
           filePillShown = true;
           streamEl.filePill.classList.add('visible');
+          showPreviewFloatGenerating();
         }
         chatBody.scrollTo({ top: chatBody.scrollHeight, behavior: 'smooth' });
       }, 30);
@@ -2123,11 +2124,20 @@
 
   /* ── Floating card show / hide ── */
   function showPreviewFloat() {
+    const pfLabel = document.getElementById('pf-label');
+    if (pfLabel) pfLabel.textContent = 'Vista previa';
+    previewFloat.classList.remove('generating');
     previewFloat.classList.add('show');
     previewFloat.setAttribute('aria-hidden', 'false');
   }
+  function showPreviewFloatGenerating() {
+    const pfLabel = document.getElementById('pf-label');
+    if (pfLabel) pfLabel.textContent = 'Generando...';
+    previewFloat.classList.add('show', 'generating');
+    previewFloat.setAttribute('aria-hidden', 'false');
+  }
   function hidePreviewFloat() {
-    previewFloat.classList.remove('show');
+    previewFloat.classList.remove('show', 'generating');
     previewFloat.setAttribute('aria-hidden', 'true');
   }
 

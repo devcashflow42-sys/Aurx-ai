@@ -282,10 +282,13 @@
 
   <!-- ═══ FLOATING PREVIEW CARD ════════════════════════════ -->
   <div class="preview-float" id="preview-float" aria-hidden="true">
+    <!-- Spinner shown while HTML is being generated -->
+    <div class="pf-spinner" aria-hidden="true"></div>
+    <!-- Eye icon shown in ready state -->
     <div class="pf-thumb" aria-hidden="true">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
     </div>
-    <span class="pf-label">Vista previa</span>
+    <span class="pf-label" id="pf-label">Vista previa</span>
     <button class="pf-btn" id="pf-open" aria-label="Abrir vista previa">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
     </button>

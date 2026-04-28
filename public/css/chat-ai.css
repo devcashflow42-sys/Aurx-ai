@@ -1562,6 +1562,37 @@ body.sb-locked { overflow:hidden; }
 .pf-btn:hover  { background: #2a2a28; }
 .pf-btn:active { transform: scale(.92); }
 
+/* Generating state — spinner replaces thumb, button hidden, not clickable */
+.pf-spinner {
+  display: none;
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
+  background: #111110;
+  flex-shrink: 0;
+  place-items: center;
+}
+.pf-spinner::after {
+  content: '';
+  display: block;
+  width: 18px;
+  height: 18px;
+  border: 2.5px solid rgba(255,255,255,.25);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: pf-spin .75s linear infinite;
+}
+@keyframes pf-spin { to { transform: rotate(360deg); } }
+
+.preview-float.generating {
+  cursor: default;
+  pointer-events: none;
+}
+.preview-float.generating .pf-spinner { display: grid; }
+.preview-float.generating .pf-thumb   { display: none; }
+.preview-float.generating .pf-btn     { display: none; }
+.preview-float.generating .pf-label   { color: #888; font-weight: 500; }
+
 /* ═══════════════════════════════════════════════
    PREVIEW BOTTOM SHEET
 ═══════════════════════════════════════════════ */
