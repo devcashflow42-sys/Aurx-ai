@@ -89,6 +89,19 @@ export const upsertConversation = async (req, res, next) => {
   }
 };
 
+/* ── PATCH /api/conversations/:id — rename */
+export const renameConversation = async (req, res, next) => {
+  try {
+    const { title } = req.body;
+    if (!title?.trim()) return res.status(400).json({ success: false, message: 'title required' });
+    const ref  = convRef(req.user.uid, req.params.id);
+    const snap = await ref.once('value');
+    if (!snap.exists()) return res.status(404).json({ success: false, message: 'Not found' });
+    await ref.update({ title: title.trim().slice(0, 100), updatedAt: Date.now() });
+    res.json({ success: true });
+  } catch (err) { next(err); }
+};
+
 /* ── DELETE /api/conversations/:id */
 export const deleteConversation = async (req, res, next) => {
   try {

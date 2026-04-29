@@ -210,6 +210,128 @@
     return date.toLocaleString('es', { month: 'long', year: 'numeric' });
   }
 
+  /* ── Sidebar context menu ──────────────────────────────── */
+  let _sbTargetId   = null;
+  let _sbTitleEl    = null;
+  let _sbMoreBtn    = null;
+  let _sbPendingDel = null;
+
+  const _sbMenu = document.createElement('div');
+  _sbMenu.className = 'ci-menu sb-ci-menu';
+  _sbMenu.innerHTML = `
+    <button class="ci-menu-item" id="sb-rename-btn">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+      Renombrar
+    </button>
+    <div class="ci-menu-sep"></div>
+    <button class="ci-menu-item ci-danger" id="sb-delete-btn">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/></svg>
+      Eliminar
+    </button>`;
+  document.body.appendChild(_sbMenu);
+
+  const _sbBackdrop = document.createElement('div');
+  _sbBackdrop.className = 'ci-backdrop';
+  document.body.appendChild(_sbBackdrop);
+
+  const _sbDialog = document.createElement('div');
+  _sbDialog.className = 'ci-dialog';
+  _sbDialog.innerHTML = `
+    <div class="ci-dialog-handle"></div>
+    <div class="ci-dialog-icon">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/></svg>
+    </div>
+    <div class="ci-dialog-title">Eliminar conversación</div>
+    <div class="ci-dialog-body">Esta acción no se puede deshacer. La conversación se eliminará permanentemente.</div>
+    <div class="ci-dialog-actions">
+      <button class="ci-btn-delete" id="sb-confirm-delete">Eliminar</button>
+      <button class="ci-btn-cancel" id="sb-confirm-cancel">Cancelar</button>
+    </div>`;
+  document.body.appendChild(_sbDialog);
+
+  function openSbMenu(id, titleEl, moreBtn) {
+    _sbTargetId = id;
+    _sbTitleEl  = titleEl;
+    _sbMoreBtn  = moreBtn;
+    moreBtn.classList.add('active');
+    const rect = moreBtn.getBoundingClientRect();
+    _sbMenu.style.top   = (rect.bottom + 6) + 'px';
+    _sbMenu.style.left  = rect.left + 'px';
+    _sbMenu.style.right = 'auto';
+    _sbMenu.classList.add('open');
+    setTimeout(() => document.addEventListener('click', _closeSbMenuOutside), 10);
+  }
+
+  function closeSbMenu() {
+    _sbMenu.classList.remove('open');
+    if (_sbMoreBtn) { _sbMoreBtn.classList.remove('active'); _sbMoreBtn = null; }
+    document.removeEventListener('click', _closeSbMenuOutside);
+  }
+
+  function _closeSbMenuOutside(e) {
+    if (!_sbMenu.contains(e.target)) closeSbMenu();
+  }
+
+  function showSbDelDialog() {
+    _sbBackdrop.classList.add('open');
+    _sbDialog.classList.add('open');
+  }
+
+  function hideSbDelDialog() {
+    _sbBackdrop.classList.remove('open');
+    _sbDialog.classList.remove('open');
+  }
+
+  _sbMenu.querySelector('#sb-rename-btn').addEventListener('click', () => {
+    const id = _sbTargetId, el = _sbTitleEl;
+    closeSbMenu();
+    if (id && el) startSbRename(id, el);
+  });
+
+  _sbMenu.querySelector('#sb-delete-btn').addEventListener('click', () => {
+    _sbPendingDel = _sbTargetId;
+    closeSbMenu();
+    showSbDelDialog();
+  });
+
+  _sbBackdrop.addEventListener('click', hideSbDelDialog);
+  _sbDialog.querySelector('#sb-confirm-cancel').addEventListener('click', hideSbDelDialog);
+  _sbDialog.querySelector('#sb-confirm-delete').addEventListener('click', async () => {
+    const id = _sbPendingDel;
+    _sbPendingDel = null;
+    hideSbDelDialog();
+    if (!id) return;
+    await deleteConv(id);
+  });
+
+  function startSbRename(id, titleEl) {
+    const original = titleEl.textContent;
+    const inp = document.createElement('input');
+    inp.type      = 'text';
+    inp.className = 'sb-rename-input';
+    inp.value     = original;
+    titleEl.replaceWith(inp);
+    inp.focus();
+    inp.select();
+    let done = false;
+    async function commit() {
+      if (done) return; done = true;
+      const val = inp.value.trim();
+      if (!val || val === original) { inp.replaceWith(titleEl); return; }
+      inp.replaceWith(titleEl);
+      titleEl.textContent = val;
+      await apiFetch('/' + id, {
+        method: 'PATCH',
+        body: JSON.stringify({ title: val }),
+      });
+    }
+    inp.addEventListener('keydown', e => {
+      if (e.key === 'Enter')  { e.preventDefault(); commit(); }
+      if (e.key === 'Escape') { done = true; inp.replaceWith(titleEl); }
+    });
+    inp.addEventListener('blur', commit);
+  }
+
   /** Fetch list from Firebase and render sidebar */
   async function renderSidebar() {
     if (!sbChatList) return;   // not present in /chat mode
@@ -246,13 +368,14 @@
         title.className   = 'sb-conv-title';
         title.textContent = conv.title;
 
-        const del = document.createElement('button');
-        del.className = 'sb-conv-del';
-        del.setAttribute('aria-label', 'Eliminar conversación');
-        del.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/></svg>`;
-        del.addEventListener('click', e => { e.stopPropagation(); deleteConv(conv.id); });
+        const more = document.createElement('button');
+        more.type      = 'button';
+        more.className = 'sb-conv-more';
+        more.setAttribute('aria-label', 'Opciones de conversación');
+        more.innerHTML = `<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg>`;
+        more.addEventListener('click', e => { e.stopPropagation(); openSbMenu(conv.id, title, more); });
 
-        btn.append(title, del);
+        btn.append(title, more);
         btn.addEventListener('click', () => {
           if (IS_CHAT_MODE) {
             window.location.href = '/chat?id=' + encodeURIComponent(conv.id);
@@ -345,6 +468,8 @@
 
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
+      if (_sbDialog.classList.contains('open')) { hideSbDelDialog(); return; }
+      if (_sbMenu.classList.contains('open'))   { closeSbMenu(); return; }
       closeAllMenus();
       if (sidebar.classList.contains('open'))       closeSidebar();
       if (imgModal.classList.contains('visible'))   closeImgModal();

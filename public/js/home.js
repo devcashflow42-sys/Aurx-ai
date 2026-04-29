@@ -130,10 +130,131 @@
     return date.toLocaleString('es', { month: 'long', year: 'numeric' });
   }
 
+  /* ── Conv context menu ────────────────────────────────── */
+  let _ciTargetId   = null;
+  let _ciTitleEl    = null;
+  let _ciMoreBtn    = null;
+  let _pendingDelId = null;
+
+  const _ciMenu = document.createElement('div');
+  _ciMenu.className = 'ci-menu';
+  _ciMenu.innerHTML = `
+    <button class="ci-menu-item" id="ci-rename-btn">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+      Renombrar
+    </button>
+    <div class="ci-menu-sep"></div>
+    <button class="ci-menu-item ci-danger" id="ci-delete-btn">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/></svg>
+      Eliminar
+    </button>`;
+  document.body.appendChild(_ciMenu);
+
+  const _ciBackdrop = document.createElement('div');
+  _ciBackdrop.className = 'ci-backdrop';
+  document.body.appendChild(_ciBackdrop);
+
+  const _ciDialog = document.createElement('div');
+  _ciDialog.className = 'ci-dialog';
+  _ciDialog.innerHTML = `
+    <div class="ci-dialog-handle"></div>
+    <div class="ci-dialog-icon">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/></svg>
+    </div>
+    <div class="ci-dialog-title">Eliminar conversación</div>
+    <div class="ci-dialog-body">Esta acción no se puede deshacer. La conversación se eliminará permanentemente.</div>
+    <div class="ci-dialog-actions">
+      <button class="ci-btn-delete" id="ci-confirm-delete">Eliminar</button>
+      <button class="ci-btn-cancel" id="ci-confirm-cancel">Cancelar</button>
+    </div>`;
+  document.body.appendChild(_ciDialog);
+
+  function openCiMenu(id, titleEl, moreBtn) {
+    _ciTargetId = id;
+    _ciTitleEl  = titleEl;
+    _ciMoreBtn  = moreBtn;
+    moreBtn.classList.add('active');
+    const rect = moreBtn.getBoundingClientRect();
+    _ciMenu.style.top   = (rect.bottom + 6) + 'px';
+    _ciMenu.style.right = (window.innerWidth - rect.right) + 'px';
+    _ciMenu.style.left  = 'auto';
+    _ciMenu.classList.add('open');
+    setTimeout(() => document.addEventListener('click', _closeCiMenuOutside), 10);
+  }
+
+  function closeCiMenu() {
+    _ciMenu.classList.remove('open');
+    if (_ciMoreBtn) { _ciMoreBtn.classList.remove('active'); _ciMoreBtn = null; }
+    document.removeEventListener('click', _closeCiMenuOutside);
+  }
+
+  function _closeCiMenuOutside(e) {
+    if (!_ciMenu.contains(e.target)) closeCiMenu();
+  }
+
+  function showDelDialog() {
+    _ciBackdrop.classList.add('open');
+    _ciDialog.classList.add('open');
+  }
+
+  function hideDelDialog() {
+    _ciBackdrop.classList.remove('open');
+    _ciDialog.classList.remove('open');
+  }
+
+  _ciMenu.querySelector('#ci-rename-btn').addEventListener('click', () => {
+    const id = _ciTargetId, el = _ciTitleEl;
+    closeCiMenu();
+    if (id && el) startCiRename(id, el);
+  });
+
+  _ciMenu.querySelector('#ci-delete-btn').addEventListener('click', () => {
+    _pendingDelId = _ciTargetId;
+    closeCiMenu();
+    showDelDialog();
+  });
+
+  _ciBackdrop.addEventListener('click', hideDelDialog);
+  _ciDialog.querySelector('#ci-confirm-cancel').addEventListener('click', hideDelDialog);
+  _ciDialog.querySelector('#ci-confirm-delete').addEventListener('click', async () => {
+    const id = _pendingDelId;
+    _pendingDelId = null;
+    hideDelDialog();
+    if (!id) return;
+    await apiFetch('/api/conversations/' + id, { method: 'DELETE' });
+    loadConversations();
+  });
+
+  function startCiRename(id, titleEl) {
+    const original = titleEl.textContent;
+    const inp = document.createElement('input');
+    inp.type      = 'text';
+    inp.className = 'ci-rename-input';
+    inp.value     = original;
+    titleEl.replaceWith(inp);
+    inp.focus();
+    inp.select();
+    let done = false;
+    async function commit() {
+      if (done) return; done = true;
+      const val = inp.value.trim();
+      if (!val || val === original) { inp.replaceWith(titleEl); return; }
+      inp.replaceWith(titleEl);
+      titleEl.textContent = val;
+      await apiFetch('/api/conversations/' + id, {
+        method: 'PATCH',
+        body: JSON.stringify({ title: val }),
+      });
+    }
+    inp.addEventListener('keydown', e => {
+      if (e.key === 'Enter')  { e.preventDefault(); commit(); }
+      if (e.key === 'Escape') { done = true; inp.replaceWith(titleEl); }
+    });
+    inp.addEventListener('blur', commit);
+  }
+
   async function loadConversations() {
-    const recentList  = document.getElementById('recent-list');
-    const activeList  = document.getElementById('active-list');
-    const activeLabel = document.getElementById('active-label');
+    const recentList = document.getElementById('recent-list');
     if (!recentList) return;
 
     const res = await apiFetch('/api/conversations/');
@@ -143,14 +264,13 @@
     }
 
     const all = res.data || [];
-
     if (!all.length) {
       recentList.innerHTML = '<div class="conv-empty">Aún no hay conversaciones.<br/>¡Inicia una nueva tarea!</div>';
       return;
     }
 
-    const groups  = [];
-    const seen    = {};
+    const groups = [];
+    const seen   = {};
     all.forEach(conv => {
       const label = dateGroupLabel(conv.updatedAt);
       if (!seen[label]) { seen[label] = true; groups.push({ label, items: [] }); }
@@ -158,7 +278,6 @@
     });
 
     recentList.innerHTML = '';
-
     groups.forEach(grp => {
       const hdr = document.createElement('div');
       hdr.className   = 'conv-date-group';
@@ -173,18 +292,17 @@
         title.className   = 'conv-item-title';
         title.textContent = conv.title || 'Sin título';
 
-        const del = document.createElement('button');
-        del.className = 'conv-item-del';
-        del.setAttribute('aria-label', 'Eliminar conversación');
-        del.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/></svg>`;
-        del.addEventListener('click', async e => {
+        const more = document.createElement('button');
+        more.type      = 'button';
+        more.className = 'conv-item-more';
+        more.setAttribute('aria-label', 'Opciones de conversación');
+        more.innerHTML = `<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg>`;
+        more.addEventListener('click', e => {
           e.stopPropagation();
-          if (!confirm('¿Eliminar esta conversación?')) return;
-          await apiFetch('/api/conversations/' + conv.id, { method: 'DELETE' });
-          loadConversations();
+          openCiMenu(conv.id, title, more);
         });
 
-        btn.append(title, del);
+        btn.append(title, more);
         btn.addEventListener('click', () => {
           window.location.href = '/chat?id=' + encodeURIComponent(conv.id);
         });
@@ -356,7 +474,12 @@
     msSearch.focus();
   });
   document.addEventListener('keydown', e => {
-    if (e.key === 'Escape') { closeModelPanel(); closeDrawer(); }
+    if (e.key === 'Escape') {
+      if (_ciDialog.classList.contains('open')) { hideDelDialog(); return; }
+      if (_ciMenu.classList.contains('open'))   { closeCiMenu(); return; }
+      closeModelPanel();
+      closeDrawer();
+    }
   });
 
   /* ── Home input ───────────────────────────────────────── */
