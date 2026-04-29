@@ -1,7 +1,7 @@
 
 import { auth, db } from '../config/firebase.js';
 
-const FREE_TOKENS = 100000;
+const FREE_TOKENS = 1000;
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 /* ─── Cookie options ─────────────────────────────────────────── */

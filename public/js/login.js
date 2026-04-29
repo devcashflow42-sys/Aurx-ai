@@ -273,7 +273,7 @@ function handleSubmit(e) {
           return;
         }
         saveSession(loginData);
-        setTimeout(function () { location.replace('/chat-ai'); }, 1000);
+        setTimeout(function () { location.replace('/home'); }, 1000);
       });
     })
     .catch(function () {
@@ -301,7 +301,7 @@ function handleSubmit(e) {
     }
     saveSession(data);
     showToast('¡Bienvenido de vuelta!', 'success');
-    setTimeout(function () { location.replace('/chat-ai'); }, 900);
+    setTimeout(function () { location.replace('/home'); }, 900);
   })
   .catch(function () {
     showToast('Error de conexión. Intenta de nuevo.', 'error');
@@ -328,7 +328,7 @@ window.addEventListener('DOMContentLoaded', function () {
     fetch(API_BASE + '/api/users/profile', { credentials: 'include' })
       .then(function (res) {
         if (res.ok) {
-          location.replace('/chat-ai');
+          location.replace('/home');
         } else {
           localStorage.removeItem('aurx_session');
           localStorage.removeItem('aurx_user');
