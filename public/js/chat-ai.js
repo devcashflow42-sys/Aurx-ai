@@ -82,6 +82,9 @@
   let fcIdCounter  = 0;
   let cameraStream = null;
 
+  /* ── Active mode state ── */
+  let selectedMode = 'auto';  // auto | reasoning | code | web | creative | analysis
+
   const API_BASE = window.location.origin;
 
   /* ══════════════════════════════════════════════
@@ -150,6 +153,7 @@
     messages.innerHTML = '';
     messages.classList.add('active');
     chatActive = true;
+    hideEmptyState();
     clearAllFiles();
     updateSendBtn();
 
@@ -169,6 +173,73 @@
     }
   }
 
+  /* ══════════════════════════════════════════════
+     EMPTY STATE helpers
+  ══════════════════════════════════════════════ */
+  const emptyState = document.getElementById('empty-state');
+
+  function showEmptyState() {
+    if (emptyState) emptyState.classList.remove('hidden');
+  }
+  function hideEmptyState() {
+    if (emptyState) emptyState.classList.add('hidden');
+  }
+
+  /* ── Empty state quick chips ── */
+  const esChips = document.getElementById('es-chips');
+  if (esChips) {
+    esChips.querySelectorAll('.es-chip').forEach(function (chip) {
+      chip.addEventListener('click', function () {
+        const prompt = chip.dataset.prompt;
+        const mode   = chip.dataset.mode;
+        if (mode) setMode(mode);
+        if (prompt && input) {
+          input.value = prompt;
+          input.dispatchEvent(new Event('input'));
+          requestAnimationFrame(function () { sendMessage(); });
+        }
+      });
+    });
+  }
+
+  /* ── Empty state mode buttons ── */
+  const esModeGrid = document.getElementById('es-modes');
+  if (esModeGrid) {
+    esModeGrid.querySelectorAll('.es-mode-btn').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        setMode(btn.dataset.mode);
+        esModeGrid.querySelectorAll('.es-mode-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+      });
+    });
+  }
+
+  /* ── Mode row (input footer) ── */
+  const modeRow = document.getElementById('mode-row');
+  if (modeRow) {
+    modeRow.querySelectorAll('.mode-btn').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        setMode(btn.dataset.mode);
+      });
+    });
+  }
+
+  function setMode(mode) {
+    selectedMode = mode;
+    /* Update mode-row buttons */
+    if (modeRow) {
+      modeRow.querySelectorAll('.mode-btn').forEach(function (b) {
+        b.classList.toggle('active', b.dataset.mode === mode);
+      });
+    }
+    /* Update empty-state mode grid */
+    if (esModeGrid) {
+      esModeGrid.querySelectorAll('.es-mode-btn').forEach(function (b) {
+        b.classList.toggle('active', b.dataset.mode === mode);
+      });
+    }
+  }
+
   /** Start fresh chat */
   function startNewChat() {
     clearTimeout(_saveTimer);
@@ -181,6 +252,7 @@
     input.style.height  = 'auto';
     clearAllFiles();
     updateSendBtn();
+    showEmptyState();
     if (!IS_CHAT_MODE) closeSidebar();
     chatBody.scrollTo({ top: 0, behavior: 'smooth' });
     if (!IS_CHAT_MODE) renderSidebar();
@@ -999,6 +1071,8 @@
     if (elAvatar) elAvatar.textContent = initial;
 
     if (!IS_CHAT_MODE) renderSidebar();
+    /* Show empty state on initial load if no conversation is active */
+    if (!chatActive) showEmptyState();
   })();
 
   // Logout button
@@ -1200,20 +1274,26 @@
     if (!text && !stagedFiles.length) return;
     if (!chatActive) { chatActive = true; messages.classList.add('active'); }
 
+    // Hide empty state on first message
+    hideEmptyState();
+
     // Start a new conversation if needed
     if (!currentConvId) {
       currentConvId = genConvId();
       currentMsgs   = [];
     }
 
+    /* Auto-detect mode if set to auto */
+    const effectiveMode = selectedMode === 'auto' ? detectMode(text) : selectedMode;
+
     const snapshot = [...stagedFiles];
     addMsg('user', text, snapshot, true);
     input.value = ''; input.style.height = 'auto';
     clearAllFiles(); updateSendBtn();
 
-    const typingId = addStatusIndicator(text);
+    const typingId = addStatusIndicator(text, effectiveMode);
 
-    streamAI(text, typingId).catch(function () {
+    streamAI(text, typingId, effectiveMode).catch(function () {
       removeTyping(typingId);
       addMsg('ai', '⚠️ Error de conexión. Verifica tu red e intenta de nuevo.', [], true);
     });
@@ -1224,30 +1304,32 @@
   ══════════════════════════════════════════════ */
   let _typingCounter = 0;
 
-  /* Context detection: returns {label, color} or null */
-  function detectContext(prompt) {
-    const p = prompt;
-    const checks = [
-      [/código|program[ao]|función|function|script|api|backend|frontend|bug|debug|clase|método|loop|array|react|node|python/i, 'Programando',         '#10b981'],
-      [/diseño|layout|ui|ux|página|webpage|componente|css|html|style|interfaz/i,                                              'Diseñando interfaz',   '#8b5cf6'],
-      [/imagen|foto|ilustración|logo|dibujo|picture|render|generar imagen/i,                                                  'Generando imagen',     '#ec4899'],
-      [/escribe|redacta|artículo|texto|ensayo|email|blog|carta|mensaje/i,                                                     'Escribiendo',          '#f59e0b'],
-      [/analiza|explica|compara|describe|revisar|review/i,                                                                    'Analizando',           '#3b82f6'],
-      [/traduce|traducción|translation|translate/i,                                                                           'Traduciendo',          '#06b6d4'],
-      [/resumen|resume|summary|sintetiza/i,                                                                                   'Resumiendo',           '#f97316'],
-    ];
-    for (const [re, label, color] of checks) {
-      if (re.test(p)) return { label, color };
-    }
-    return null;
+  /* Auto-detect mode from prompt text */
+  function detectMode(prompt) {
+    const p = (prompt || '').toLowerCase();
+    if (/canción|letra|verso|chorus|coro|hook|bridge|estrofa|rap|reggaeton|balada|rima|rimar|poema|poesía|lírica/i.test(p)) return 'creative';
+    if (/analiza|análisis|evalúa|audita|diagnóstica|investiga|informe|reporte|compara|revisa el sistema/i.test(p)) return 'analysis';
+    if (/página web|landing page|landing|website|app web|dashboard|portfolio|html|diseño web|interfaz/i.test(p)) return 'web';
+    if (/razona|piensa|explica paso a paso|por qué|por que|¿por qué|lógica|matemática|decisión|filosofía/i.test(p)) return 'reasoning';
+    if (/código|program[ao]|función|function|script|api|backend|frontend|bug|debug|clase|método|react|node|python|typescript|sql|bash/i.test(p)) return 'code';
+    return 'auto';
   }
+
+  /* Mode config: label + color for status indicators */
+  const MODE_CONFIG = {
+    reasoning: { label: 'Razonando profundamente', color: '#4f46e5' },
+    code:      { label: 'Programando',              color: '#059669' },
+    web:       { label: 'Diseñando la web',         color: '#0284c7' },
+    creative:  { label: 'Creando la letra',         color: '#9333ea' },
+    analysis:  { label: 'Analizando en detalle',    color: '#ea580c' },
+  };
 
   const STATUS_DEFAULTS = ['Analizando solicitud', 'Procesando contexto', 'Generando respuesta', 'Finalizando'];
 
-  function addStatusIndicator(userPrompt) {
+  function addStatusIndicator(userPrompt, mode) {
     const id      = 'typing-' + (++_typingCounter);
-    const context = detectContext(userPrompt);
-    const statuses = context ? [context.label] : STATUS_DEFAULTS;
+    const mcfg    = MODE_CONFIG[mode] || null;
+    const statuses = mcfg ? [mcfg.label] : STATUS_DEFAULTS;
 
     const wrap = document.createElement('div');
     wrap.className = 'msg ai';
@@ -1267,7 +1349,7 @@
 
     const dotEl = document.createElement('span');
     dotEl.className = 'status-dot-pulse';
-    if (context) dotEl.style.background = context.color;
+    if (mcfg) dotEl.style.background = mcfg.color;
 
     const labelEl = document.createElement('span');
     labelEl.className = 'status-label';
@@ -1284,7 +1366,7 @@
 
     /* Rotate labels for default sequence */
     let phase = 1;
-    const interval = context ? null : setInterval(function () {
+    const interval = mcfg ? null : setInterval(function () {
       labelEl.style.opacity = '0';
       labelEl.style.transform = 'translateY(-4px)';
       setTimeout(function () {
@@ -1348,12 +1430,12 @@
   }
 
   /* Streaming fetch — SSE from /api/ai/stream */
-  async function streamAI(text, typingId) {
+  async function streamAI(text, typingId, mode) {
     const res = await fetch(API_BASE + '/api/ai/stream', {
       method: 'POST',
       credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ prompt: text, model: selectedModelId }),
+      body: JSON.stringify({ prompt: text, model: selectedModelId, mode: mode || 'auto' }),
     });
 
     if (res.status === 401) { logout(); return; }
@@ -1668,11 +1750,187 @@
       .replace(/`([^`]+)`/g,         '<code class="md-code">$1</code>');
   }
 
+  /* ── THINKING block builder ── */
+  function buildThinkingBlock(content) {
+    const steps = content.split('\n').filter(l => l.trim());
+    const stepsHtml = steps.map(function (line) {
+      const m = line.match(/^Paso\s+(\d+):\s*(.+)/i);
+      if (m) {
+        return `<div class="thinking-step">
+          <div class="thinking-step-num">${esc(m[1])}</div>
+          <div class="thinking-step-text">${inlineMd(esc(m[2]))}</div>
+        </div>`;
+      }
+      return `<div class="thinking-step">
+        <div class="thinking-step-num">•</div>
+        <div class="thinking-step-text">${inlineMd(esc(line.trim()))}</div>
+      </div>`;
+    }).join('');
+
+    return `<div class="thinking-block">
+      <div class="thinking-hdr" onclick="this.closest('.thinking-block').classList.toggle('collapsed')">
+        <div class="thinking-hdr-left">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#4f46e5" stroke-width="2.2" stroke-linecap="round"><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><circle cx="12" cy="12" r="10"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          Proceso de razonamiento
+          <span class="thinking-hdr-badge">${steps.length} pasos</span>
+        </div>
+        <button class="thinking-toggle" aria-label="Mostrar/ocultar razonamiento">›</button>
+      </div>
+      <div class="thinking-body">${stepsHtml || '<div class="thinking-step"><div class="thinking-step-text" style="color:var(--text-3)">Pensando...</div></div>'}</div>
+    </div>`;
+  }
+
+  /* ── SONG block builder ── */
+  function buildSongBlock(genre, content) {
+    const COPY_ICON = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>`;
+
+    const SECTION_LABELS = {
+      'VERSE': 'Verso', 'VERSE 1': 'Verso 1', 'VERSE 2': 'Verso 2', 'VERSE 3': 'Verso 3',
+      'CHORUS': 'Coro', 'CHORUS FINAL': 'Coro Final', 'PRE-CHORUS': 'Pre-coro',
+      'HOOK': 'Hook', 'BRIDGE': 'Puente', 'OUTRO': 'Outro', 'INTRO': 'Intro',
+    };
+
+    const lines = content.split('\n');
+    let sectionsHtml = '';
+    let notesHtml    = '';
+    let currentSection = null;
+    let currentLines   = [];
+    let inNotes        = false;
+    let notesLines     = [];
+
+    function flushSection() {
+      if (!currentSection && !currentLines.length) return;
+      const label = currentSection
+        ? (SECTION_LABELS[currentSection.toUpperCase()] || currentSection)
+        : 'Letra';
+      const isChorus = /chorus|coro|hook/i.test(currentSection || '');
+      const lyricsTxt = currentLines.filter(l => l.trim()).join('\n');
+      if (!lyricsTxt) return;
+      sectionsHtml += `<div class="song-section${isChorus ? ' song-chorus' : ''}">
+        <div class="song-section-label">${esc(label)}</div>
+        <div class="song-lyrics">${esc(lyricsTxt)}</div>
+      </div>`;
+      currentLines = [];
+    }
+
+    for (const line of lines) {
+      const trimmed = line.trim();
+      /* Detect section header like [VERSE 1] or [CHORUS] */
+      const sectionMatch = trimmed.match(/^\[([A-Z0-9 \-]+)\]$/i);
+      /* Detect notes section */
+      if (/^\*{1,2}Notas de producción/i.test(trimmed)) { flushSection(); inNotes = true; continue; }
+      if (inNotes) { notesLines.push(trimmed.replace(/^[-*]\s*/, '')); continue; }
+      if (sectionMatch) { flushSection(); currentSection = sectionMatch[1]; continue; }
+      currentLines.push(line);
+    }
+    flushSection();
+
+    if (notesLines.length) {
+      notesHtml = `<div class="song-notes">
+        <div class="song-notes-label">Notas de producción</div>
+        <div class="song-notes-text">${notesLines.filter(l=>l).map(l=>esc(l)).join('<br/>')}</div>
+      </div>`;
+    }
+
+    const genreLabel = genre ? genre.toUpperCase() : 'CANCIÓN';
+    const allText = content.replace(/\[[^\]]+\]/g, '').trim();
+
+    return `<div class="song-block">
+      <div class="song-hdr">
+        <div class="song-hdr-left">
+          <div class="song-hdr-icon">🎵</div>
+          <div class="song-hdr-info">
+            <div class="song-hdr-title">Letra de canción</div>
+            <div class="song-hdr-genre">${esc(genreLabel)}</div>
+          </div>
+        </div>
+        <button class="song-copy-btn" onclick="(function(btn){
+          var text = btn.dataset.text;
+          if(navigator.clipboard){navigator.clipboard.writeText(text).then(function(){btn.textContent='✓ Copiado';setTimeout(function(){btn.innerHTML='${COPY_ICON} Copiar letra'},2000)})}
+        })(this)" data-text="${esc(allText)}">${COPY_ICON} Copiar letra</button>
+      </div>
+      <div class="song-body">${sectionsHtml || `<div class="song-section"><div class="song-lyrics">${esc(content.trim())}</div></div>`}</div>
+      ${notesHtml}
+    </div>`;
+  }
+
+  /* ── ANALYSIS block builder ── */
+  function buildAnalysisBlock(content) {
+    const SECTION_ICONS = {
+      'resumen ejecutivo': '📋', 'hallazgos': '🔍', 'análisis': '🔬',
+      'fortalezas': '✅', 'mejora': '⚠️', 'recomendaciones': '💡', 'conclusión': '🎯',
+    };
+
+    const lines = content.split('\n');
+    let sectionsHtml = '';
+    let sectionNum   = 0;
+    let currentTitle = '';
+    let currentLines = [];
+
+    function flushASection() {
+      if (!currentTitle && !currentLines.length) return;
+      const body = currentLines.filter(l => l.trim());
+      if (!body.length) return;
+      sectionNum++;
+      const iconKey = Object.keys(SECTION_ICONS).find(k => currentTitle.toLowerCase().includes(k));
+      const icon    = SECTION_ICONS[iconKey] || '📌';
+      const listItems = body.filter(l => /^[-*•]\s/.test(l.trim()));
+      const isAllList = listItems.length === body.length && body.length > 1;
+
+      let bodyHtml = '';
+      if (isAllList) {
+        bodyHtml = `<ul class="analysis-list">${listItems.map(l => `<li>${inlineMd(esc(l.replace(/^[-*•]\s/,'').trim()))}</li>`).join('')}</ul>`;
+      } else {
+        bodyHtml = body.map(function (l) {
+          if (/^[-*•]\s/.test(l.trim())) return `<ul class="analysis-list"><li>${inlineMd(esc(l.replace(/^[-*•]\s/,'').trim()))}</li></ul>`;
+          if (/^\d+\.\s/.test(l.trim())) return `<ul class="analysis-list"><li>${inlineMd(esc(l.replace(/^\d+\.\s/,'').trim()))}</li></ul>`;
+          return `<p class="analysis-content">${inlineMd(esc(l.trim()))}</p>`;
+        }).join('');
+      }
+
+      sectionsHtml += `<div class="analysis-section">
+        <div class="analysis-section-title">
+          <span class="an-num">${sectionNum}</span>
+          ${icon} ${esc(currentTitle)}
+        </div>
+        ${bodyHtml}
+      </div>`;
+      currentLines = [];
+    }
+
+    for (const line of lines) {
+      const trimmed = line.trim();
+      const h2Match = trimmed.match(/^##\s+(.+)/);
+      const h3Match = trimmed.match(/^###\s+(.+)/);
+      if (h2Match || h3Match) {
+        flushASection();
+        currentTitle = (h2Match || h3Match)[1].replace(/\*\*/g,'').trim();
+        continue;
+      }
+      currentLines.push(line);
+    }
+    flushASection();
+
+    return `<div class="analysis-block">
+      <div class="analysis-hdr">
+        <div class="analysis-hdr-left">
+          <div class="analysis-hdr-icon">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+          </div>
+          <div class="analysis-hdr-title">Informe de análisis</div>
+        </div>
+        <span class="analysis-hdr-badge">Análisis completo</span>
+      </div>
+      <div class="analysis-body">${sectionsHtml || `<p class="analysis-content">${esc(content.trim())}</p>`}</div>
+    </div>`;
+  }
+
+  /* ── SQL copiable label ── */
   /* ── Copiable block builder ── */
   const COPIABLE_LABELS = {
     codigo: 'Código', comando: 'Comando', prompt: 'Prompt',
     json: 'JSON', texto: 'Texto', env: 'Variables .env',
-    html: 'HTML', css: 'CSS',
+    html: 'HTML', css: 'CSS', sql: 'SQL', bash: 'Bash',
   };
   function buildCopiableBlock(type, content) {
     const label = COPIABLE_LABELS[type] || type.toUpperCase();
@@ -1748,6 +2006,50 @@
         }
         rdCardBuf.push(line);
         i++; continue;
+      }
+
+      /* ── [THINKING] ... [/THINKING] block ── */
+      if (line.trim() === '[THINKING]' && !inCodeBlock) {
+        closeBoth();
+        i++;
+        const thinkLines = [];
+        while (i < lines.length && lines[i].trim() !== '[/THINKING]') {
+          thinkLines.push(lines[i]);
+          i++;
+        }
+        i++; // skip [/THINKING]
+        html += buildThinkingBlock(thinkLines.join('\n'));
+        continue;
+      }
+
+      /* ── [SONG:genre] ... [/SONG] block ── */
+      const songTag = line.trim().match(/^\[SONG(?::([^\]]+))?\]$/i);
+      if (songTag && !inCodeBlock) {
+        closeBoth();
+        const songGenre = songTag[1] || '';
+        i++;
+        const songLines = [];
+        while (i < lines.length && !/^\[\/SONG\]$/i.test(lines[i].trim())) {
+          songLines.push(lines[i]);
+          i++;
+        }
+        i++; // skip [/SONG]
+        html += buildSongBlock(songGenre, songLines.join('\n'));
+        continue;
+      }
+
+      /* ── [ANALYSIS] ... [/ANALYSIS] block ── */
+      if (line.trim() === '[ANALYSIS]' && !inCodeBlock) {
+        closeBoth();
+        i++;
+        const anlLines = [];
+        while (i < lines.length && lines[i].trim() !== '[/ANALYSIS]') {
+          anlLines.push(lines[i]);
+          i++;
+        }
+        i++; // skip [/ANALYSIS]
+        html += buildAnalysisBlock(anlLines.join('\n'));
+        continue;
       }
 
       /* ── [COPIABLE:tipo] block ── */

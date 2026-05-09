@@ -17,7 +17,7 @@
 <body>
 
 <!-- Hidden file inputs -->
-<input type="file" id="file-input-doc"   multiple accept=".pdf,.zip,.txt,.docx,.json,.env,.csv,.md,.js,.ts,.py" style="display:none;" />
+<input type="file" id="file-input-doc"   multiple accept=".pdf,.zip,.txt,.docx,.json,.env,.csv,.md,.js,.ts,.py,.html,.css,.sql,.sh,.rb,.go,.rs" style="display:none;" />
 <input type="file" id="file-input-image" multiple accept="image/*" style="display:none;" />
 
 <!-- Camera modal -->
@@ -126,12 +126,10 @@
   <!-- MAIN -->
   <main class="main">
     <header class="topbar">
-      <!-- Left: hamburger (sidebar mode) or back arrow (/chat mode) -->
       <button class="icon-btn" id="hamburger" aria-label="Abrir menú" aria-expanded="false" aria-controls="sidebar">
         <svg class="tb-hamburger" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M3 12h18M3 6h18M3 18h11"/></svg>
         <svg class="tb-back" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" style="display:none"><polyline points="15 18 9 12 15 6"/></svg>
       </button>
-      <!-- Center -->
       <div class="topbar-center">
         <a class="logo tb-logo" href="/">
           <div class="logo-mark">
@@ -143,7 +141,6 @@
         </a>
         <span class="tb-conv-title" id="conv-title"></span>
       </div>
-      <!-- Right: token pill + 3-dot menu -->
       <div class="topbar-right">
         <button class="token-pill" id="token-pill" title="Mis créditos de IA">
           <svg width="11" height="11" viewBox="0 0 24 24" fill="#8b5cf6"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6L12 2z"/></svg>
@@ -165,6 +162,76 @@
 
     <div class="chat-body" id="chat-body">
       <div class="messages" id="messages" aria-live="polite"></div>
+
+      <!-- EMPTY STATE — shown when no messages -->
+      <div class="empty-state" id="empty-state">
+        <div class="es-logo">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/>
+          </svg>
+        </div>
+        <h2 class="es-title">¿En qué puedo ayudarte?</h2>
+        <p class="es-subtitle">Razona, crea, analiza y programa con inteligencia avanzada</p>
+
+        <!-- Quick action chips -->
+        <div class="es-chips" id="es-chips">
+          <button class="es-chip" data-mode="reasoning" data-prompt="Explica paso a paso cómo funciona la recursividad en programación con ejemplos prácticos">
+            <span class="es-chip-icon">🧠</span>
+            <span class="es-chip-text">Razonar</span>
+          </button>
+          <button class="es-chip" data-mode="code" data-prompt="Crea una función en JavaScript para hacer fetch con retry automático y manejo de errores profesional">
+            <span class="es-chip-icon">💻</span>
+            <span class="es-chip-text">Programar</span>
+          </button>
+          <button class="es-chip" data-mode="web" data-prompt="Crea una landing page moderna y profesional para una startup de tecnología">
+            <span class="es-chip-icon">🌐</span>
+            <span class="es-chip-text">Crear web</span>
+          </button>
+          <button class="es-chip" data-mode="creative" data-prompt="Escribe una letra de canción de reggaeton romántico sobre el amor a distancia">
+            <span class="es-chip-icon">🎵</span>
+            <span class="es-chip-text">Crear canción</span>
+          </button>
+          <button class="es-chip" data-mode="analysis" data-prompt="Analiza en profundidad las mejores prácticas de arquitectura para aplicaciones web escalables">
+            <span class="es-chip-icon">📊</span>
+            <span class="es-chip-text">Analizar</span>
+          </button>
+          <button class="es-chip" data-mode="code" data-prompt="Crea una API REST completa en Node.js con Express, autenticación JWT y manejo de errores">
+            <span class="es-chip-icon">🔧</span>
+            <span class="es-chip-text">Backend</span>
+          </button>
+        </div>
+
+        <!-- Mode selector grid -->
+        <div class="es-modes" id="es-modes">
+          <div class="es-mode-label">Modo de trabajo</div>
+          <div class="es-mode-grid">
+            <button class="es-mode-btn active" data-mode="auto" title="Detección automática del modo">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>
+              Auto
+            </button>
+            <button class="es-mode-btn" data-mode="reasoning" title="Razonamiento profundo paso a paso">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><circle cx="12" cy="12" r="10"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+              Razonar
+            </button>
+            <button class="es-mode-btn" data-mode="code" title="Generación de código profesional">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+              Código
+            </button>
+            <button class="es-mode-btn" data-mode="web" title="Crear páginas web y apps">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+              Web
+            </button>
+            <button class="es-mode-btn" data-mode="creative" title="Crear canciones, letras y poemas">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+              Creativo
+            </button>
+            <button class="es-mode-btn" data-mode="analysis" title="Análisis profundo y reportes">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+              Análisis
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- INPUT ZONE -->
@@ -194,7 +261,7 @@
                 </div>
                 <div class="attach-item-text">
                   <div class="attach-item-label">Subir archivo</div>
-                  <div class="attach-item-desc">PDF, ZIP, TXT, DOCX…</div>
+                  <div class="attach-item-desc">PDF, ZIP, TXT, JS, PY, SQL…</div>
                 </div>
               </button>
               <div class="attach-divider"></div>
@@ -229,7 +296,7 @@
 
           <textarea
             id="chat-input" rows="1"
-            placeholder="Pregunta lo que quieras..."
+            placeholder="Pregunta, crea o analiza cualquier cosa..."
             autocomplete="off" spellcheck="true"
             aria-label="Escribe tu mensaje"
           ></textarea>
@@ -241,16 +308,28 @@
           </button>
         </div>
 
-        <!-- INPUT FOOTER with MODEL PILL -->
+        <!-- INPUT FOOTER: mode row + model pill -->
         <div class="input-footer">
-          <div style="position:relative;">
-            <button class="model-pill" id="model-pill" aria-haspopup="dialog" aria-expanded="false">
-              <span class="model-dot dot-green" id="model-dot"></span>
-              <span id="model-label">GPT-4o Mini</span>
-              <svg class="model-caret" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
-            </button>
+          <div class="input-footer-left">
+            <!-- Mode pills row -->
+            <div class="mode-row" id="mode-row" role="group" aria-label="Modo de trabajo">
+              <button class="mode-btn active" id="mode-auto"     data-mode="auto"     title="Detección automática">Auto</button>
+              <button class="mode-btn"        id="mode-reasoning" data-mode="reasoning" title="Razonamiento profundo">🧠 Razonar</button>
+              <button class="mode-btn"        id="mode-code"     data-mode="code"     title="Programación">💻 Código</button>
+              <button class="mode-btn"        id="mode-web"      data-mode="web"      title="Crear páginas web">🌐 Web</button>
+              <button class="mode-btn"        id="mode-creative" data-mode="creative" title="Canciones y poemas">🎵 Creativo</button>
+              <button class="mode-btn"        id="mode-analysis" data-mode="analysis" title="Análisis profundo">📊 Análisis</button>
+            </div>
           </div>
-          <span class="input-hint">Enter para enviar</span>
+          <div class="input-footer-right">
+            <div style="position:relative;">
+              <button class="model-pill" id="model-pill" aria-haspopup="dialog" aria-expanded="false">
+                <span class="model-dot dot-green" id="model-dot"></span>
+                <span id="model-label">GPT-4o Mini</span>
+                <svg class="model-caret" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -282,9 +361,7 @@
 
   <!-- ═══ FLOATING PREVIEW CARD ════════════════════════════ -->
   <div class="preview-float" id="preview-float" aria-hidden="true">
-    <!-- Spinner shown while HTML is being generated -->
     <div class="pf-spinner" aria-hidden="true"></div>
-    <!-- Eye icon shown in ready state -->
     <div class="pf-thumb" aria-hidden="true">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
     </div>
@@ -296,7 +373,7 @@
 
   <!-- ═══ RESUMEN SHEET ═══════════════════════════════════ -->
   <div class="rs-overlay" id="rs-overlay"></div>
-  <div class="rs-sheet"   id="rs-sheet" role="dialog" aria-modal="true" aria-label="Resumen de acciones" aria-hidden="true">
+  <div class="rs-sheet" id="rs-sheet" role="dialog" aria-modal="true" aria-label="Resumen de acciones" aria-hidden="true">
     <div class="rs-handle" aria-hidden="true"></div>
     <div class="rs-hdr">
       <span class="rs-hdr-title">Resumen</span>
@@ -328,7 +405,6 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script src="js/chat-ai.js"></script>
 <script src="js/fullscreen-nav.js"></script>
-
 
 <script>
 (function () {
